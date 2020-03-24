@@ -3,11 +3,13 @@ package com.xzy.read.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.User;
+import com.xzy.read.service.FileService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SmsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author XieZhongYi
@@ -42,6 +44,11 @@ public class UserController {
     @GetMapping("/info")
     public ResultVo userInfo() {
         return userService.getUserInfo();
+    }
+
+    @PostMapping("head")
+    public ResultVo updateHead(@RequestParam("file") MultipartFile multipartFile) {
+        return userService.uploadHead(multipartFile);
     }
 
     @PutMapping("/info")

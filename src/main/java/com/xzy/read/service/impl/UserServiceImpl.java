@@ -3,6 +3,7 @@ package com.xzy.read.service.impl;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.User;
 import com.xzy.read.repository.UserRepository;
+import com.xzy.read.service.FileService;
 import com.xzy.read.service.UserService;
 
 import com.xzy.read.util.ResultVoUtil;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +33,12 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    private final FileService fileService;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, FileService fileService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.fileService = fileService;
     }
 
     @Override
@@ -102,6 +107,18 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         String telephone = u.getTelephone();
         u.setTelephone(telephone.replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2"));
         return ResultVoUtil.success(u);
+    }
+
+    @Override
+    public ResultVo uploadHead(MultipartFile multipartFile) {
+        User u = userRepository.findByTelephone(SecurityUtil.getAuthentication().getName());
+        ResultVo resultVo = fileService.uploadFile(multipartFile);
+        if (resultVo.getCode() == 1) {
+            u.setHeadUrl(resultVo.getData().toString());
+            userRepository.save(u);
+            return resultVo;
+        }
+        return ResultVoUtil.error(0,"发生错误");
     }
 
     @Override

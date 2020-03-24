@@ -2,6 +2,7 @@ package com.xzy.read.service;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.User;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author XieZhongYi
@@ -16,6 +17,8 @@ public interface UserService {
     ResultVo getUserInfo();
 
     ResultVo update(User user);
+
+    ResultVo uploadHead(MultipartFile multipartFile);
 
     ResultVo resetPassword(User user);
 
