@@ -37,15 +37,16 @@ public class SmsUtil {
         SmsSingleSender ssender = new SmsSingleSender(appid,appkey);
         String code = generateCode();
         String[] params = {code};
-        try {
-            SmsSingleSenderResult result = ssender.sendWithParam(
-                    "86", phoneNumber, templateId, params , smsSign, "", "");
-            log.info("验证码:" + code);
-            return ResultVoUtil.success(code);
-        } catch (HTTPException | JSONException | IOException e) {
-            e.printStackTrace();
-        }
-        return ResultVoUtil.error(0,"发生未知错误，请稍后再试");
+//        try {
+//            SmsSingleSenderResult result = ssender.sendWithParam(
+//                    "86", phoneNumber, templateId, params , smsSign, "", "");
+//            log.info("验证码:" + code);
+//            return ResultVoUtil.success(code);
+//        } catch (HTTPException | JSONException | IOException e) {
+//            e.printStackTrace();
+//        }
+//        return ResultVoUtil.error(0,"发生未知错误，请稍后再试");
+        return ResultVoUtil.success(code);
     }
 
     public String generateCode(){

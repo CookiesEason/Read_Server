@@ -13,8 +13,12 @@ public interface UserService {
 
     ResultVo save(User user);
 
+    ResultVo getUserInfo();
+
     ResultVo update(User user);
 
     ResultVo resetPassword(User user);
+
+    ResultVo resetTelephone(User user);
 
 }

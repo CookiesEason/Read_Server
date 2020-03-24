@@ -69,12 +69,23 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
     @Override
+    public ResultVo getUserInfo() {
+        User u = userRepository.findByTelephone(SecurityUtil.getAuthentication().getName());
+        if (u == null) {
+            return ResultVoUtil.error(0,"您未登录,请重新登录");
+        }
+        String telephone = u.getTelephone();
+        u.setTelephone(telephone.replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2"));
+        return ResultVoUtil.success(u);
+    }
+
+    @Override
     public ResultVo update(User user) {
         User u = userRepository.findByTelephone(SecurityUtil.getAuthentication().getName());
         if (user.getNickname() != null) {
             if (!u.getNickname().equals(user.getNickname())
                     && userRepository.findByNickname(user.getNickname()) != null) {
-                return ResultVoUtil.error(0, "该昵称已经被使用");
+                return ResultVoUtil.error(0, "昵称已被使用，换一个吧");
             }
             u.setNickname(user.getNickname());
         }
@@ -88,6 +99,8 @@ public class UserServiceImpl implements UserDetailsService, UserService {
             u.setSex(user.getSex());
         }
         userRepository.save(u);
+        String telephone = u.getTelephone();
+        u.setTelephone(telephone.replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2"));
         return ResultVoUtil.success(u);
     }
 
@@ -95,6 +108,17 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     public ResultVo resetPassword(User user) {
         User u = userRepository.findByTelephone(user.getTelephone());
         u.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(u);
+        return ResultVoUtil.success();
+    }
+
+    @Override
+    public ResultVo resetTelephone(User user) {
+        if (userRepository.findByTelephone(user.getTelephone()) != null) {
+            return ResultVoUtil.error(0, "该手机号已经被注册");
+        }
+        User u = userRepository.findByTelephone(SecurityUtil.getAuthentication().getName());
+        u.setTelephone(user.getTelephone());
         userRepository.save(u);
         return ResultVoUtil.success();
     }

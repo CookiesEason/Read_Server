@@ -41,7 +41,7 @@ public class UserController {
 
     @GetMapping("/info")
     public ResultVo userInfo() {
-        return ResultVoUtil.success("用户才能看见的");
+        return userService.getUserInfo();
     }
 
     @PutMapping("/info")
@@ -52,6 +52,11 @@ public class UserController {
     @PutMapping("/resetPassword")
     public ResultVo resetPassword(@RequestBody User user){
         return userService.resetPassword(user);
+    }
+
+    @PutMapping("/resetTelephone")
+    public ResultVo resetTelephone(@RequestBody User user){
+        return userService.resetTelephone(user);
     }
 
     @GetMapping("/code")
