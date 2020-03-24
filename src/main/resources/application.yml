@@ -17,3 +17,5 @@ spring:
   devtools:
     restart:
       exclude: application.yml
+  profiles:
+    active: dev

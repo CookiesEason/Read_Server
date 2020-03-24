@@ -7,6 +7,7 @@ import com.xzy.read.service.UserService;
 
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,7 @@ import java.util.List;
  * 2020/03/23 16:07
  */
 @Service
+@Slf4j
 public class UserServiceImpl implements UserDetailsService, UserService {
 
     private final UserRepository userRepository;
@@ -54,13 +56,14 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     @Override
     public ResultVo save(User user) {
         if (userRepository.findByTelephone(user.getTelephone()) != null) {
-            return ResultVoUtil.error(400, "该手机号已经被注册");
+            return ResultVoUtil.error(0, "该手机号已经被注册");
         }
         if (userRepository.findByNickname(user.getNickname()) != null) {
-            return ResultVoUtil.error(400, "该昵称已经被使用");
+            return ResultVoUtil.error(0, "该昵称已经被使用");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("USER");
+        user.setSex("保密");
         userRepository.save(user);
         return ResultVoUtil.success();
     }
@@ -71,7 +74,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         if (user.getNickname() != null) {
             if (!u.getNickname().equals(user.getNickname())
                     && userRepository.findByNickname(user.getNickname()) != null) {
-                return ResultVoUtil.error(400, "该昵称已经被使用");
+                return ResultVoUtil.error(0, "该昵称已经被使用");
             }
             u.setNickname(user.getNickname());
         }
@@ -86,6 +89,14 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         }
         userRepository.save(u);
         return ResultVoUtil.success(u);
+    }
+
+    @Override
+    public ResultVo resetPassword(User user) {
+        User u = userRepository.findByTelephone(user.getTelephone());
+        u.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(u);
+        return ResultVoUtil.success();
     }
 
 

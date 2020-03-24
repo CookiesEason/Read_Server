@@ -27,7 +27,6 @@ public class User {
 
     private String telephone;
 
-    @JsonIgnore
     private String password;
 
     private String headUrl;
@@ -37,6 +36,7 @@ public class User {
     private String introduce;
 
     private String role;
+
 
 
 }

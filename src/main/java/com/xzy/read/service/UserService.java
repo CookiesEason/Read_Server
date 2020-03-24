@@ -15,4 +15,6 @@ public interface UserService {
 
     ResultVo update(User user);
 
+    ResultVo resetPassword(User user);
+
 }

@@ -5,8 +5,8 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.User;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
-import com.xzy.read.util.SecurityUtil;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.xzy.read.util.SmsUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private UserService userService;
+
+    @Autowired
+    private SmsUtil smsUtil;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -46,4 +49,13 @@ public class UserController {
         return userService.update(user);
     }
 
+    @PutMapping("/resetPassword")
+    public ResultVo resetPassword(@RequestBody User user){
+        return userService.resetPassword(user);
+    }
+
+    @GetMapping("/code")
+    public ResultVo sendCode(String telephone) {
+        return smsUtil.txSmsSend(telephone);
+    }
 }
