@@ -5,6 +5,8 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.User;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
+import com.xzy.read.util.SecurityUtil;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -37,6 +39,11 @@ public class UserController {
     @GetMapping("/info")
     public ResultVo userInfo() {
         return ResultVoUtil.success("用户才能看见的");
+    }
+
+    @PutMapping("/info")
+    public ResultVo updateUser(@RequestBody User user){
+        return userService.update(user);
     }
 
 }

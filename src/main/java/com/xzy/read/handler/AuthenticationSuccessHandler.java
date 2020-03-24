@@ -28,7 +28,7 @@ public class AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccess
         response.setContentType("application/json; charset=utf-8");
         User user = service.findByTelephone(authentication.getName());
         UserTokenDTO userTokenDTO = new UserTokenDTO(
-                user.getNickname(),user.getTelephone(),user.getHeadUrl(),user.getSex(),
+                user.getId(), user.getNickname(),user.getTelephone(),user.getHeadUrl(),user.getSex(),
                 user.getIntroduce(),user.getRole(), JwtUtil.generateToken(user)
         );
         response.getWriter().print(JSON.toJSON(ResultVoUtil.success(userTokenDTO)));

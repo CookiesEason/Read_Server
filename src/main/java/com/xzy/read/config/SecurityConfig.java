@@ -3,6 +3,7 @@ package com.xzy.read.config;
 import com.xzy.read.filter.JwtAuthorizationTokenFilter;
 import com.xzy.read.handler.AuthenticationFailureHandler;
 import com.xzy.read.handler.AuthenticationSuccessHandler;
+import com.xzy.read.handler.LogoutHandle;
 import com.xzy.read.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +30,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests()
-                .antMatchers("/api/user/info").hasAnyAuthority("USER","ADMIN")
                 .anyRequest().permitAll()
                 .and()
                     .formLogin()
@@ -37,6 +37,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .loginProcessingUrl("/api/user/login")
                     .successHandler(authenticationSuccessHandler())
                     .failureHandler(authenticationFailureHandler())
+                    .permitAll()
+                .and()
+                    .logout()
+                    .logoutUrl("/api/logout")
+                    .logoutSuccessHandler(logoutHandle())
                     .permitAll()
                 .and()
                     .addFilterBefore(authenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -65,5 +70,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public JwtAuthorizationTokenFilter authenticationTokenFilter(){
         return new JwtAuthorizationTokenFilter ();
+    }
+
+    @Bean
+    public LogoutHandle logoutHandle(){
+        return new LogoutHandle();
     }
 }

@@ -13,4 +13,6 @@ public interface UserService {
 
     ResultVo save(User user);
 
+    ResultVo update(User user);
+
 }

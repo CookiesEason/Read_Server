@@ -6,6 +6,7 @@ import com.xzy.read.repository.UserRepository;
 import com.xzy.read.service.UserService;
 
 import com.xzy.read.util.ResultVoUtil;
+import com.xzy.read.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -62,6 +63,29 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         user.setRole("USER");
         userRepository.save(user);
         return ResultVoUtil.success();
+    }
+
+    @Override
+    public ResultVo update(User user) {
+        User u = userRepository.findByTelephone(SecurityUtil.getAuthentication().getName());
+        if (user.getNickname() != null) {
+            if (!u.getNickname().equals(user.getNickname())
+                    && userRepository.findByNickname(user.getNickname()) != null) {
+                return ResultVoUtil.error(400, "该昵称已经被使用");
+            }
+            u.setNickname(user.getNickname());
+        }
+        if (user.getIntroduce() != null) {
+            u.setIntroduce(user.getIntroduce());
+        }
+        if (user.getHeadUrl() != null) {
+            u.setHeadUrl(user.getHeadUrl());
+        }
+        if (user.getSex() != null) {
+            u.setSex(user.getSex());
+        }
+        userRepository.save(u);
+        return ResultVoUtil.success(u);
     }
 
 

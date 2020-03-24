@@ -12,6 +12,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserTokenDTO {
 
+    private Long id;
+
     private String nickname;
 
     private String telephone;
