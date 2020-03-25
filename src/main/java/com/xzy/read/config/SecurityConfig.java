@@ -30,6 +30,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests()
+                .antMatchers("/api/notebooks","/api/notebooks/*").hasAnyAuthority("USER","ADMIN")
                 .anyRequest().permitAll()
                 .and()
                     .formLogin()
@@ -40,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .permitAll()
                 .and()
                     .logout()
-                    .logoutUrl("/api/logout")
+                    .logoutUrl("/api/user/logout")
                     .logoutSuccessHandler(logoutHandle())
                     .permitAll()
                 .and()
