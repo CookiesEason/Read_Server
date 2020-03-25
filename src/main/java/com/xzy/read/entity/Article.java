@@ -30,11 +30,13 @@ public class Article {
     @Lob
     private String content;
 
-    private Long words;
+    private Long words = 0L;
 
-    private Boolean isTop;
+    private Boolean isTop = false;
 
-    private Boolean isPublished;
+    private Boolean isPublished = false;
+
+    private Boolean isDeleted = false;
 
     @CreatedDate
     private Timestamp createdDate;
