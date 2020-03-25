@@ -15,4 +15,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     Article findByIsTop(Boolean isTop);
 
+    List<Article> findAllByIsDeletedAndUserId(Boolean isDelete, Long userId);
+
 }

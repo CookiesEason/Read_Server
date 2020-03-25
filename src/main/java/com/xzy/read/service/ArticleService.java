@@ -22,6 +22,12 @@ public interface ArticleService {
 
     ResultVo delete(Article article);
 
+    ResultVo deleteData(Article article);
+
+    ResultVo getRecycleData();
+
+    ResultVo recycle(Article article);
+
     ResultVo setTop(Article article);
 
     ResultVo move(Article article);

@@ -45,4 +45,6 @@ public class Article {
 
     private Long notebookId;
 
+    private Long userId;
+
 }

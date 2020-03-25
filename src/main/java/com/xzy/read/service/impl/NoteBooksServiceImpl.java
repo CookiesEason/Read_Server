@@ -4,6 +4,7 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.NoteBooks;
 import com.xzy.read.repository.NoteBooksRepository;
 import com.xzy.read.service.NoteBooksService;
+import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
 import org.springframework.stereotype.Service;
@@ -20,23 +21,27 @@ public class NoteBooksServiceImpl implements NoteBooksService {
 
     private NoteBooksRepository noteBooksRepository;
 
-    public NoteBooksServiceImpl(NoteBooksRepository noteBooksRepository) {
+    private UserService userService;
+
+    public NoteBooksServiceImpl(NoteBooksRepository noteBooksRepository, UserService userService) {
         this.noteBooksRepository = noteBooksRepository;
+        this.userService = userService;
     }
 
     @Override
     public ResultVo getAll() {
-        List<NoteBooks> noteBooks = noteBooksRepository.findAllByTelephone(SecurityUtil.getAuthentication().getName());
+        Long id = userService.getUserId();
+        List<NoteBooks> noteBooks = noteBooksRepository.findAllByUserId(id);
         return ResultVoUtil.success(noteBooks);
     }
 
     @Override
     public ResultVo create(NoteBooks noteBooks) {
-        if (noteBooksRepository.findByNameAndTelephone(noteBooks.getName(),
-                SecurityUtil.getAuthentication().getName())!=null) {
+        Long id = userService.getUserId();
+        if (noteBooksRepository.findByNameAndUserId(noteBooks.getName(), id)!=null) {
             return ResultVoUtil.error(0,"该文集名称已经存在");
         }
-        noteBooks.setTelephone(SecurityUtil.getAuthentication().getName());
+        noteBooks.setUserId(id);
         noteBooksRepository.save(noteBooks);
         return ResultVoUtil.success();
     }

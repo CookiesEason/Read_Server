@@ -25,6 +25,6 @@ public class NoteBooks {
 
     private String name;
 
-    private String telephone;
+    private Long userId;
 
 }

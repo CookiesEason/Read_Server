@@ -12,6 +12,8 @@ public interface UserService {
 
     User findByTelephone(String telephone);
 
+    Long getUserId();
+
     ResultVo save(User user);
 
     ResultVo getUserInfo();

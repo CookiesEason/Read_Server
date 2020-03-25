@@ -59,6 +59,11 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
     @Override
+    public Long getUserId() {
+        return userRepository.findIdByTelephone(SecurityUtil.getAuthentication().getName());
+    }
+
+    @Override
     public ResultVo save(User user) {
         if (userRepository.findByTelephone(user.getTelephone()) != null) {
             return ResultVoUtil.error(0, "该手机号已经被注册");

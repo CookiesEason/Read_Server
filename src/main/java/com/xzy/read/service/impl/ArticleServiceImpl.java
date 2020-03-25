@@ -4,6 +4,7 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.service.ArticleService;
+import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +22,11 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository) {
+    private UserService userService;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService) {
         this.articleRepository = articleRepository;
+        this.userService = userService;
     }
 
     @Override
@@ -37,6 +41,7 @@ public class ArticleServiceImpl implements ArticleService {
         LocalDate date = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         article.setTitle(date.format(formatter));
+        article.setUserId(userService.getUserId());
         articleRepository.save(article);
         return ResultVoUtil.success();
     }
@@ -68,7 +73,31 @@ public class ArticleServiceImpl implements ArticleService {
             articleRepository.save(articleOptional.get());
             return ResultVoUtil.success();
         }
+        return ResultVoUtil.error(0,"文章不存在");
+    }
+
+    @Override
+    public ResultVo deleteData(Article article) {
+        articleRepository.deleteById(article.getId());
         return ResultVoUtil.success();
+    }
+
+    @Override
+    public ResultVo getRecycleData() {
+        Long id = userService.getUserId();
+        List<Article> articles = articleRepository.findAllByIsDeletedAndUserId(true, id);
+        return ResultVoUtil.success(articles);
+    }
+
+    @Override
+    public ResultVo recycle(Article article) {
+        Optional<Article> articleOptional = articleRepository.findById(article.getId());
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setIsDeleted(false);
+            articleRepository.save(articleOptional.get());
+            return ResultVoUtil.success();
+        }
+        return ResultVoUtil.error(0,"文章不存在");
     }
 
     @Override

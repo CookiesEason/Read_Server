@@ -2,7 +2,6 @@ package com.xzy.read.controller;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
-import com.xzy.read.entity.NoteBooks;
 import com.xzy.read.service.ArticleService;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +47,21 @@ public class ArticleController {
     @DeleteMapping("/articles")
     public ResultVo delete(@RequestBody Article article) {
         return articleService.delete(article);
+    }
+
+    @GetMapping("/articles/recycle")
+    public ResultVo recycle() {
+        return articleService.getRecycleData();
+    }
+
+    @PutMapping("/articles/recycle")
+    public ResultVo recycle(@RequestBody Article article) {
+        return articleService.recycle(article);
+    }
+
+    @DeleteMapping("/articles/recycle")
+    public ResultVo deleteData(@RequestBody Article article) {
+        return articleService.deleteData(article);
     }
 
 }

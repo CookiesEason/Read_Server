@@ -11,8 +11,8 @@ import java.util.List;
  */
 public interface NoteBooksRepository extends JpaRepository<NoteBooks, Long> {
 
-    List<NoteBooks> findAllByTelephone(String telephone);
+    List<NoteBooks> findAllByUserId(Long userId);
 
-    NoteBooks findByNameAndTelephone(String name,String telephone);
+    NoteBooks findByNameAndUserId(String name,Long userId);
 
 }
