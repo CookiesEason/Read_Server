@@ -34,6 +34,11 @@ public class ArticleController {
         return articleService.update(article);
     }
 
+    @PutMapping("/articles/publish")
+    public ResultVo publish(@RequestBody Article article) {
+        return articleService.publish(article);
+    }
+
     @PutMapping("/articles/top")
     public ResultVo setTop(@RequestBody Article article) {
         return articleService.setTop(article);

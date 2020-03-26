@@ -43,7 +43,7 @@ public class ArticleServiceImpl implements ArticleService {
         article.setTitle(date.format(formatter));
         article.setUserId(userService.getUserId());
         articleRepository.save(article);
-        return ResultVoUtil.success();
+        return ResultVoUtil.success(article);
     }
 
     @Override
@@ -123,6 +123,17 @@ public class ArticleServiceImpl implements ArticleService {
         Optional<Article> articleOptional = articleRepository.findById(article.getId());
         if (articleOptional.isPresent()) {
             articleOptional.get().setNotebookId(article.getNotebookId());
+            articleRepository.save(articleOptional.get());
+            return ResultVoUtil.success();
+        }
+        return ResultVoUtil.error(0,"该文章不存在");
+    }
+
+    @Override
+    public ResultVo publish(Article article) {
+        Optional<Article> articleOptional = articleRepository.findById(article.getId());
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setIsPublished(true);
             articleRepository.save(articleOptional.get());
             return ResultVoUtil.success();
         }

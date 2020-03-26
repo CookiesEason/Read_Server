@@ -6,7 +6,6 @@ import com.xzy.read.repository.NoteBooksRepository;
 import com.xzy.read.service.NoteBooksService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
-import com.xzy.read.util.SecurityUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class NoteBooksServiceImpl implements NoteBooksService {
     @Override
     public ResultVo getAll() {
         Long id = userService.getUserId();
-        List<NoteBooks> noteBooks = noteBooksRepository.findAllByUserId(id);
+        List<NoteBooks> noteBooks = noteBooksRepository.findAllByUserIdAndIsDeleted(id,false);
         return ResultVoUtil.success(noteBooks);
     }
 
@@ -43,13 +42,17 @@ public class NoteBooksServiceImpl implements NoteBooksService {
         }
         noteBooks.setUserId(id);
         noteBooksRepository.save(noteBooks);
-        return ResultVoUtil.success();
+        return ResultVoUtil.success(noteBooks);
     }
 
     @Override
     public ResultVo update(NoteBooks noteBooks) {
         Optional<NoteBooks> nb = noteBooksRepository.findById(noteBooks.getId());
         if (nb.isPresent()) {
+            Long id = userService.getUserId();
+            if (noteBooksRepository.findByNameAndUserId(noteBooks.getName(), id)!=null) {
+                return ResultVoUtil.error(0,"该文集名称已经存在");
+            }
             nb.get().setName(noteBooks.getName());
             noteBooksRepository.save(nb.get());
             return ResultVoUtil.success();
@@ -60,7 +63,11 @@ public class NoteBooksServiceImpl implements NoteBooksService {
 
     @Override
     public ResultVo delete(Long id) {
-        noteBooksRepository.deleteById(id);
+        Optional<NoteBooks> nb = noteBooksRepository.findById(id);
+        if (nb.isPresent()) {
+            nb.get().setIsDeleted(true);
+            noteBooksRepository.save(nb.get());
+        }
         return ResultVoUtil.success();
     }
 }

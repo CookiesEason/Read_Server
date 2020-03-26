@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface NoteBooksRepository extends JpaRepository<NoteBooks, Long> {
 
-    List<NoteBooks> findAllByUserId(Long userId);
+    List<NoteBooks> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     NoteBooks findByNameAndUserId(String name,Long userId);
 

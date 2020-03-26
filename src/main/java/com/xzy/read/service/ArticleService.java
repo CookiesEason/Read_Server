@@ -32,4 +32,6 @@ public interface ArticleService {
 
     ResultVo move(Article article);
 
+    ResultVo publish(Article article);
+
 }

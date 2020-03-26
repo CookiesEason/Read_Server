@@ -25,6 +25,8 @@ public class NoteBooks {
 
     private String name;
 
+    private Boolean isDeleted = false;
+
     private Long userId;
 
 }
