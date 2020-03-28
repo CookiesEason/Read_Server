@@ -4,6 +4,7 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
 import com.xzy.read.service.ArticleService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author XieZhongYi
@@ -22,6 +23,11 @@ public class ArticleController {
     @GetMapping("/articles")
     public ResultVo findAllByNoteId(Long noteId) {
         return articleService.findAllByNoteId(noteId);
+    }
+
+    @GetMapping("/articles/one")
+    public ResultVo findByArticleId(Long id) {
+        return articleService.findById(id);
     }
 
     @PostMapping("/articles")
@@ -67,6 +73,11 @@ public class ArticleController {
     @DeleteMapping("/articles/recycle")
     public ResultVo deleteData(@RequestBody Article article) {
         return articleService.deleteData(article);
+    }
+
+    @PostMapping("/articles/img")
+    public ResultVo uploadImg(@RequestParam("file") MultipartFile multipartFile) {
+        return articleService.uploadImg(multipartFile);
     }
 
 }

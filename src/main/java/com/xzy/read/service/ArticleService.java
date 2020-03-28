@@ -3,6 +3,7 @@ package com.xzy.read.service;
 import com.sun.xml.bind.v2.TODO;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author XieZhongYi
@@ -33,5 +34,9 @@ public interface ArticleService {
     ResultVo move(Article article);
 
     ResultVo publish(Article article);
+
+    ResultVo uploadImg(MultipartFile multipartFile);
+
+    ResultVo findById(Long id);
 
 }

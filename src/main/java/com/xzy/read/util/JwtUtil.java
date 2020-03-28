@@ -47,7 +47,7 @@ public class JwtUtil {
         }
     }
     private static Date generateExpirationDate() {
-        return new Date(System.currentTimeMillis() + 9600*1000);
+        return new Date(System.currentTimeMillis() + 96000*1000);
     }
 
     public static Boolean isTokenExpired(String token) {

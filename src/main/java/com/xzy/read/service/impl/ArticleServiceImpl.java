@@ -4,14 +4,20 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.service.ArticleService;
+import com.xzy.read.service.FileService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author XieZhongYi
@@ -24,15 +30,21 @@ public class ArticleServiceImpl implements ArticleService {
 
     private UserService userService;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService) {
+    private FileService fileService;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService) {
         this.articleRepository = articleRepository;
         this.userService = userService;
+        this.fileService = fileService;
     }
 
     @Override
     public ResultVo findAllByNoteId(Long id) {
         //TODO 字段应不显示文章的内容
         List<Article> articles = articleRepository.findAllByNotebookIdAndIsDeleted(id,false);
+        for (Article article : articles) {
+            article.setContent(removeHtml(article.getContent()));
+        }
         return ResultVoUtil.success(articles);
     }
 
@@ -55,7 +67,8 @@ public class ArticleServiceImpl implements ArticleService {
             article1.setContent(article.getContent());
             article1.setWords(article.getWords());
             articleRepository.save(article1);
-            return ResultVoUtil.success();
+            article1.setContent(removeHtml(article1.getContent()));
+            return ResultVoUtil.success(article1);
         }
         return ResultVoUtil.error(0,"该文章不存在");
     }
@@ -133,10 +146,34 @@ public class ArticleServiceImpl implements ArticleService {
     public ResultVo publish(Article article) {
         Optional<Article> articleOptional = articleRepository.findById(article.getId());
         if (articleOptional.isPresent()) {
-            articleOptional.get().setIsPublished(true);
-            articleRepository.save(articleOptional.get());
-            return ResultVoUtil.success();
+            Article article1 = articleOptional.get();
+            article1.setIsPublished(true);
+            article1.setContent(article.getContent());
+            article1.setTitle(article.getTitle());
+            article1.setWords(article.getWords());
+            articleRepository.save(article1);
+            article1.setContent(removeHtml(article1.getContent()));
+            return ResultVoUtil.success(article1);
         }
         return ResultVoUtil.error(0,"该文章不存在");
+    }
+
+    @Override
+    public ResultVo uploadImg(MultipartFile multipartFile) {
+        return fileService.uploadFile(multipartFile);
+    }
+
+    @Override
+    public ResultVo findById(Long id) {
+        Optional<Article> articleOptional = articleRepository.findById(id);
+        return articleOptional.map(ResultVoUtil::success).orElseGet(() -> ResultVoUtil.error(0, "该文章不存在"));
+    }
+
+    private String removeHtml (String content) {
+        if (content == null) {
+            return "";
+        }
+        Document doc = Jsoup.parse(content);
+        return doc.text();
     }
 }
