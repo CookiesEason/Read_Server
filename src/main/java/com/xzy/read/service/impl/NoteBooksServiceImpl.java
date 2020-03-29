@@ -70,4 +70,10 @@ public class NoteBooksServiceImpl implements NoteBooksService {
         }
         return ResultVoUtil.success();
     }
+
+    @Override
+    public NoteBooks findById(Long id) {
+        Optional<NoteBooks> noteBooksOptional = noteBooksRepository.findById(id);
+        return noteBooksOptional.orElse(null);
+    }
 }

@@ -17,4 +17,6 @@ public interface NoteBooksService {
 
     ResultVo delete(Long id);
 
+    NoteBooks findById(Long id);
+
 }

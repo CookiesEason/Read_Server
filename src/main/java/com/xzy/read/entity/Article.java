@@ -32,6 +32,12 @@ public class Article {
 
     private Long words = 0L;
 
+    private Long clicks = 0L;
+
+    private Long comments = 0L;
+
+    private Long likes = 0L;
+
     private Boolean isTop = false;
 
     private Boolean isPublished = false;

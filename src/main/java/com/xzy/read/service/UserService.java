@@ -14,6 +14,8 @@ public interface UserService {
 
     Long getUserId();
 
+    User findById(Long userId);
+
     ResultVo save(User user);
 
     ResultVo getUserInfo();

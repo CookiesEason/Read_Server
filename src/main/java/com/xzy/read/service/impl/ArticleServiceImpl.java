@@ -1,23 +1,26 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.dto.ArticleDTO;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.NoteBooks;
+import com.xzy.read.entity.User;
 import com.xzy.read.repository.ArticleRepository;
-import com.xzy.read.service.ArticleService;
-import com.xzy.read.service.FileService;
-import com.xzy.read.service.UserService;
+import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
+import org.bouncycastle.jcajce.provider.symmetric.DES;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author XieZhongYi
@@ -32,10 +35,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     private FileService fileService;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService) {
+    private FollowersService followersService;
+
+    private NoteBooksService noteBooksService;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
+        this.followersService = followersService;
+        this.noteBooksService = noteBooksService;
     }
 
     @Override
@@ -167,6 +176,38 @@ public class ArticleServiceImpl implements ArticleService {
     public ResultVo findById(Long id) {
         Optional<Article> articleOptional = articleRepository.findById(id);
         return articleOptional.map(ResultVoUtil::success).orElseGet(() -> ResultVoUtil.error(0, "该文章不存在"));
+    }
+
+    @Override
+    public ResultVo findArticleById(Long id) {
+        Optional<Article> articleOptional = articleRepository.findById(id);
+        if (articleOptional.isPresent()) {
+            Article article = articleOptional.get();
+            User user = userService.findById(article.getUserId());
+            Long userId = userService.getUserId();
+            Long isFollowed = followersService.countByFromUserIdAndToUserIdAndStatus(
+                    userId, article.getUserId(), true
+            );
+            NoteBooks noteBooks = noteBooksService.findById(article.getNotebookId());
+            ArticleDTO articleDTO = new ArticleDTO(
+                    user.getId(),user.getHeadUrl(),user.getNickname(),isFollowed > 0 ,article,noteBooks
+            );
+            return ResultVoUtil.success(articleDTO);
+        }
+        return ResultVoUtil.error(0,"该文章不存在");
+    }
+
+    @Override
+    public ResultVo findSomeArticles(Long id) {
+        Optional<Article> articleOptional = articleRepository.findById(id);
+        if (articleOptional.isPresent()) {
+            Article article = articleOptional.get();
+            PageRequest pageRequest =
+                    PageRequest.of(0,4, Sort.by(Sort.Direction.DESC, "createdDate"));
+            List<Article> articles = articleRepository.findAllByUserIdAndIsPublished(article.getUserId(), true,pageRequest);
+            return ResultVoUtil.success(articles);
+        }
+        return ResultVoUtil.error(0, "该文章不存在");
     }
 
     private String removeHtml (String content) {

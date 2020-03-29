@@ -80,4 +80,14 @@ public class ArticleController {
         return articleService.uploadImg(multipartFile);
     }
 
+    @GetMapping("/p/{id}")
+    public ResultVo getArticle(@PathVariable Long id) {
+        return articleService.findArticleById(id);
+    }
+
+    @GetMapping("/p/user/{id}")
+    public ResultVo getUserArticle(@PathVariable Long id) {
+        return articleService.findSomeArticles(id);
+    }
+
 }

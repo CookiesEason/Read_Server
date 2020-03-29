@@ -39,4 +39,9 @@ public interface ArticleService {
 
     ResultVo findById(Long id);
 
+    ResultVo findArticleById(Long id);
+
+    ResultVo findSomeArticles(Long id);
+
+
 }

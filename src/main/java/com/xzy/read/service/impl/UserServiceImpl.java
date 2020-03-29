@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author XieZhongYi
@@ -61,6 +62,12 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     @Override
     public Long getUserId() {
         return userRepository.findIdByTelephone(SecurityUtil.getAuthentication().getName());
+    }
+
+    @Override
+    public User findById(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        return userOptional.orElse(null);
     }
 
     @Override
