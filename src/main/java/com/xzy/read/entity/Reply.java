@@ -20,6 +20,8 @@ public class Reply {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long articleId;
+
     private Long commentId;
 
     private Long toUserId;

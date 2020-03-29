@@ -1,8 +1,8 @@
 package com.xzy.read.service;
 
-import com.sun.xml.bind.v2.TODO;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.Likes;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -42,6 +42,11 @@ public interface ArticleService {
     ResultVo findArticleById(Long id);
 
     ResultVo findSomeArticles(Long id);
+
+    void like(Likes like);
+
+    void addClickCount(Article article);
+
 
 
 }

@@ -3,12 +3,13 @@ package com.xzy.read.service.impl;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.ArticleDTO;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.Likes;
 import com.xzy.read.entity.NoteBooks;
 import com.xzy.read.entity.User;
 import com.xzy.read.repository.ArticleRepository;
+import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
-import org.bouncycastle.jcajce.provider.symmetric.DES;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -39,12 +39,15 @@ public class ArticleServiceImpl implements ArticleService {
 
     private NoteBooksService noteBooksService;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService) {
+    private LikeRepository likeRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
         this.followersService = followersService;
         this.noteBooksService = noteBooksService;
+        this.likeRepository = likeRepository;
     }
 
     @Override
@@ -208,6 +211,49 @@ public class ArticleServiceImpl implements ArticleService {
             return ResultVoUtil.success(articles);
         }
         return ResultVoUtil.error(0, "该文章不存在");
+    }
+
+    @Override
+    public void like(Likes l) {
+        Likes like = likeRepository.findByArticleIdAndUserId(l.getArticleId(),l.getUserId());
+        if (like != null) {
+            like.setStatus(!like.getStatus());
+            if (like.getStatus()) {
+                addLikeCount(like.getArticleId());
+            } else  {
+                delLikeCount(like.getArticleId());
+            }
+            likeRepository.save(like);
+        } else {
+            l.setStatus(true);
+            addLikeCount(l.getArticleId());
+            likeRepository.save(l);
+        }
+    }
+
+    @Override
+    public void addClickCount(Article article) {
+        Optional<Article> articleOptional = articleRepository.findById(article.getId());
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setClicks(articleOptional.get().getClicks()+1);
+            articleRepository.save(articleOptional.get());
+        }
+    }
+
+    private void addLikeCount(Long id) {
+        Optional<Article> articleOptional = articleRepository.findById(id);
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setLikes(articleOptional.get().getLikes()+1);
+            articleRepository.save(articleOptional.get());
+        }
+    }
+
+    private void delLikeCount(Long id) {
+        Optional<Article> articleOptional = articleRepository.findById(id);
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setLikes(articleOptional.get().getLikes()-1);
+            articleRepository.save(articleOptional.get());
+        }
     }
 
     private String removeHtml (String content) {

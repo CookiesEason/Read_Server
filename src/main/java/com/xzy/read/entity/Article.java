@@ -34,8 +34,6 @@ public class Article {
 
     private Long clicks = 0L;
 
-    private Long comments = 0L;
-
     private Long likes = 0L;
 
     private Boolean isTop = false;

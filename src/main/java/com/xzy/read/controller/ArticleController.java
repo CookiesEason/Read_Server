@@ -2,6 +2,7 @@ package com.xzy.read.controller;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.Likes;
 import com.xzy.read.service.ArticleService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -88,6 +89,16 @@ public class ArticleController {
     @GetMapping("/p/user/{id}")
     public ResultVo getUserArticle(@PathVariable Long id) {
         return articleService.findSomeArticles(id);
+    }
+
+    @PutMapping("/p/like")
+    public void like(@RequestBody Likes like) {
+        articleService.like(like);
+    }
+
+    @PutMapping("/p/click")
+    public void click(@RequestBody Article article) {
+        articleService.addClickCount(article);
     }
 
 }
