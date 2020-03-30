@@ -2,6 +2,7 @@ package com.xzy.read.controller;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.Collection;
 import com.xzy.read.entity.Likes;
 import com.xzy.read.service.ArticleService;
 import org.springframework.web.bind.annotation.*;
@@ -99,6 +100,21 @@ public class ArticleController {
     @PutMapping("/p/click")
     public void click(@RequestBody Article article) {
         articleService.addClickCount(article);
+    }
+
+    @PostMapping("/p/collection")
+    public ResultVo collection(@RequestBody Collection collection) {
+       return articleService.collection(collection);
+    }
+
+    @DeleteMapping("/p/collection")
+    public ResultVo cancelCollection(@RequestBody Collection collection) {
+        return articleService.cancelCollection(collection);
+    }
+
+    @GetMapping("/p/collection")
+    public ResultVo collections() {
+        return articleService.findCollections();
     }
 
 }

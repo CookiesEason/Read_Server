@@ -2,6 +2,7 @@ package com.xzy.read.service;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Article;
+import com.xzy.read.entity.Collection;
 import com.xzy.read.entity.Likes;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,6 +47,12 @@ public interface ArticleService {
     void like(Likes like);
 
     void addClickCount(Article article);
+
+    ResultVo collection(Collection collection);
+
+    ResultVo cancelCollection(Collection collection);
+
+    ResultVo findCollections();
 
 
 

@@ -2,23 +2,25 @@ package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.ArticleDTO;
-import com.xzy.read.entity.Article;
-import com.xzy.read.entity.Likes;
-import com.xzy.read.entity.NoteBooks;
-import com.xzy.read.entity.User;
+import com.xzy.read.dto.SimpleArticleDTO;
+import com.xzy.read.entity.*;
 import com.xzy.read.repository.ArticleRepository;
+import com.xzy.read.repository.CollectionRepository;
 import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
+import com.xzy.read.util.SecurityUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,13 +43,16 @@ public class ArticleServiceImpl implements ArticleService {
 
     private LikeRepository likeRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository) {
+    private CollectionRepository collectionRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
         this.followersService = followersService;
         this.noteBooksService = noteBooksService;
         this.likeRepository = likeRepository;
+        this.collectionRepository = collectionRepository;
     }
 
     @Override
@@ -238,6 +243,40 @@ public class ArticleServiceImpl implements ArticleService {
             articleOptional.get().setClicks(articleOptional.get().getClicks()+1);
             articleRepository.save(articleOptional.get());
         }
+    }
+
+    @Override
+    public ResultVo collection(Collection collection) {
+        collectionRepository.save(collection);
+        return ResultVoUtil.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultVo cancelCollection(Collection collection) {
+        collectionRepository.deleteByArticleIdAndUserId(collection.getArticleId(), collection.getUserId());
+        return ResultVoUtil.success();
+    }
+
+    @Override
+    public ResultVo findCollections() {
+        User user = userService.findByTelephone(SecurityUtil.getAuthentication().getName());
+        List<Collection> collections = collectionRepository.findAllByUserId(user.getId());
+        List<Long> ids = new ArrayList<>();
+        for (Collection collection : collections) {
+            ids.add(collection.getArticleId());
+        }
+        List<Article> articleList = articleRepository.findAllByIdIn(ids);
+        List<SimpleArticleDTO> articles = new ArrayList<>();
+        for (Article article : articleList) {
+            SimpleArticleDTO simpleArticleDTO = new SimpleArticleDTO(
+                    article.getId(),article.getTitle(),removeHtml(article.getContent()),
+                    user.getId(),user.getNickname(),
+                    articleRepository.countCommentsByArticleId(article.getId()),article.getLikes()
+            );
+            articles.add(simpleArticleDTO);
+        }
+        return ResultVoUtil.success(articles);
     }
 
     private void addLikeCount(Long id) {
