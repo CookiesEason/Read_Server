@@ -24,6 +24,12 @@ public class ArticleDTO {
 
     private Article article;
 
-    private NoteBooks noteBooks;
+    private Boolean isLiked;
+
+    private Boolean isCollected;
+
+    private Long nbId;
+
+    private String notebook;
 
 }

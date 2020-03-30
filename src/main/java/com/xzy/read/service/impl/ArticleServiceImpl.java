@@ -2,6 +2,8 @@ package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.ArticleDTO;
+import com.xzy.read.dto.LikeUserDTO;
+import com.xzy.read.dto.PageDTO;
 import com.xzy.read.dto.SimpleArticleDTO;
 import com.xzy.read.entity.*;
 import com.xzy.read.repository.ArticleRepository;
@@ -12,6 +14,7 @@ import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -189,16 +192,22 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVo findArticleById(Long id) {
         Optional<Article> articleOptional = articleRepository.findById(id);
+        Long userId = userService.getUserId();
         if (articleOptional.isPresent()) {
+            boolean isLiked = false, isCollected = false, isFollowed = false;
             Article article = articleOptional.get();
             User user = userService.findById(article.getUserId());
-            Long userId = userService.getUserId();
-            Long isFollowed = followersService.countByFromUserIdAndToUserIdAndStatus(
-                    userId, article.getUserId(), true
-            );
+            if (userId != null ) {
+                isFollowed = followersService.countByFromUserIdAndToUserIdAndStatus(
+                        userId, article.getUserId(), true
+                ) > 0;
+                isLiked = likeRepository.existsByArticleIdAndUserIdAndStatus(article.getId(), userId, true);
+                isCollected = collectionRepository.existsByArticleIdAndUserId(article.getId(),userId);
+            }
             NoteBooks noteBooks = noteBooksService.findById(article.getNotebookId());
             ArticleDTO articleDTO = new ArticleDTO(
-                    user.getId(),user.getHeadUrl(),user.getNickname(),isFollowed > 0 ,article,noteBooks
+                    user.getId(),user.getHeadUrl(),user.getNickname(),isFollowed,article,
+                    isLiked, isCollected, noteBooks.getId(), noteBooks.getName()
             );
             return ResultVoUtil.success(articleDTO);
         }
@@ -234,6 +243,28 @@ public class ArticleServiceImpl implements ArticleService {
             addLikeCount(l.getArticleId());
             likeRepository.save(l);
         }
+    }
+
+    @Override
+    public ResultVo likesUsers(Long articleId, int page) {
+        Long userId = userService.getUserId();
+        Page<Likes> likesPage =  likeRepository.findAllByArticleIdAndStatus(articleId,true,
+                    PageRequest.of(page-1,10,Sort.by(Sort.Direction.DESC, "id")));
+        List<Likes> likes = likesPage.toList();
+        List<LikeUserDTO> likeUserDTOS = new ArrayList<>();
+        for (Likes like : likes) {
+            User user = userService.findById(like.getUserId());
+            boolean isFollowed = false;
+            if ( userId != null) {
+                isFollowed = followersService.countByFromUserIdAndToUserIdAndStatus(
+                        like.getUserId(), userId, true
+                ) > 0;
+            }
+            LikeUserDTO likeUserDTO = new LikeUserDTO(user.getId(), user.getNickname(), user.getHeadUrl(),isFollowed);
+            likeUserDTOS.add(likeUserDTO);
+        }
+        PageDTO<LikeUserDTO> pageDTO = new PageDTO<>(likeUserDTOS, likesPage.getTotalElements(), likesPage.getTotalPages());
+        return ResultVoUtil.success(pageDTO);
     }
 
     @Override

@@ -46,6 +46,8 @@ public interface ArticleService {
 
     void like(Likes like);
 
+    ResultVo likesUsers(Long id, int page);
+
     void addClickCount(Article article);
 
     ResultVo collection(Collection collection);

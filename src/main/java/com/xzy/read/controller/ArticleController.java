@@ -97,6 +97,11 @@ public class ArticleController {
         articleService.like(like);
     }
 
+    @GetMapping("/p/like/user")
+    public ResultVo likeUsers(Long articleId, @RequestParam(defaultValue = "1") int page) {
+        return articleService.likesUsers(articleId, page);
+    }
+
     @PutMapping("/p/click")
     public void click(@RequestBody Article article) {
         articleService.addClickCount(article);

@@ -13,7 +13,7 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     List<Collection> findAllByUserId(Long userId);
 
-    Collection findByArticleIdAndUserId(Long articleId, Long userId);
+    Boolean existsByArticleIdAndUserId(Long articleId, Long userId);
 
     void deleteByArticleIdAndUserId(Long articleId, Long userId);
 
