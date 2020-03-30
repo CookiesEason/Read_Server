@@ -5,9 +5,11 @@ import com.xzy.read.dto.CommentDTO;
 import com.xzy.read.dto.PageDTO;
 import com.xzy.read.dto.SimpleCommentDTO;
 import com.xzy.read.dto.SimpleReplyDTO;
+import com.xzy.read.entity.Article;
 import com.xzy.read.entity.Comment;
 import com.xzy.read.entity.Reply;
 import com.xzy.read.entity.User;
+import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CommentRepository;
 import com.xzy.read.service.CommentService;
 import com.xzy.read.service.ReplyService;
@@ -18,8 +20,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -31,12 +35,15 @@ public class CommentServiceImpl implements CommentService {
 
     private CommentRepository commentRepository;
 
+    private ArticleRepository articleRepository;
+
     private UserService userService;
 
     private ReplyService replyService;
 
-    public CommentServiceImpl(CommentRepository commentRepository, UserService userService, ReplyService replyService) {
+    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService) {
         this.commentRepository = commentRepository;
+        this.articleRepository = articleRepository;
         this.userService = userService;
         this.replyService = replyService;
     }
@@ -48,6 +55,11 @@ public class CommentServiceImpl implements CommentService {
         SimpleCommentDTO simpleCommentDTO = new SimpleCommentDTO(
                 user.getId(),user.getNickname(), user.getHeadUrl(), comment.getContent(),comment.getCreatedDate()
         );
+        Optional<Article> articleOptional = articleRepository.findById(comment.getArticleId());
+        if (articleOptional.isPresent()) {
+            articleOptional.get().setRecentCommentDate(new Timestamp(System.currentTimeMillis()));
+            articleRepository.save(articleOptional.get());
+        }
         return ResultVoUtil.success(simpleCommentDTO);
     }
 
