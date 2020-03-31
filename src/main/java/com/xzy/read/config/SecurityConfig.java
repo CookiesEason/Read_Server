@@ -5,8 +5,10 @@ import com.xzy.read.handler.AuthenticationFailureHandler;
 import com.xzy.read.handler.AuthenticationSuccessHandler;
 import com.xzy.read.handler.LogoutHandle;
 import com.xzy.read.service.impl.UserServiceImpl;
+import org.json.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,6 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/api/notebooks").hasAnyAuthority("USER","ADMIN")
                 .antMatchers("/api/articles").hasAnyAuthority("USER","ADMIN")
+                .antMatchers(HttpMethod.PUT,"/api/follow").hasAnyAuthority("USER","ADMIN")
                 .anyRequest().permitAll()
                 .and()
                     .formLogin()

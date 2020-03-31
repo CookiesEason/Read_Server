@@ -6,6 +6,7 @@ import com.xzy.read.dto.LikeUserDTO;
 import com.xzy.read.dto.PageDTO;
 import com.xzy.read.dto.SimpleArticleDTO;
 import com.xzy.read.entity.*;
+import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CollectionRepository;
 import com.xzy.read.repository.LikeRepository;
@@ -201,7 +202,7 @@ public class ArticleServiceImpl implements ArticleService {
                 isFollowed = followersService.countByFromUserIdAndToUserIdAndStatus(
                         userId, article.getUserId(), true
                 ) > 0;
-                isLiked = likeRepository.existsByArticleIdAndUserIdAndStatus(article.getId(), userId, true);
+                isLiked = likeRepository.existsByTypeIdAndUserIdAndStatusAndType(article.getId(), userId, true, Type.ARTICLE);
                 isCollected = collectionRepository.existsByArticleIdAndUserId(article.getId(),userId);
             }
             NoteBooks noteBooks = noteBooksService.findById(article.getNotebookId());
@@ -234,18 +235,19 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public void like(Likes l) {
-        Likes like = likeRepository.findByArticleIdAndUserId(l.getArticleId(),l.getUserId());
+        Likes like = likeRepository.findByTypeIdAndUserIdAndType(l.getTypeId(),l.getUserId(), Type.ARTICLE);
         if (like != null) {
             like.setStatus(!like.getStatus());
             if (like.getStatus()) {
-                addLikeCount(like.getArticleId());
+                addLikeCount(like.getTypeId());
             } else  {
-                delLikeCount(like.getArticleId());
+                delLikeCount(like.getTypeId());
             }
             likeRepository.save(like);
         } else {
             l.setStatus(true);
-            addLikeCount(l.getArticleId());
+            l.setType(Type.ARTICLE);
+            addLikeCount(l.getTypeId());
             likeRepository.save(l);
         }
     }
@@ -253,8 +255,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVo likesUsers(Long articleId, int page) {
         Long userId = userService.getUserId();
-        Page<Likes> likesPage =  likeRepository.findAllByArticleIdAndStatus(articleId,true,
-                    PageRequest.of(page-1,10,Sort.by(Sort.Direction.DESC, "id")));
+        Page<Likes> likesPage =  likeRepository.findAllByTypeIdAndStatusAndType(articleId,true,
+                    PageRequest.of(page-1,10,Sort.by(Sort.Direction.DESC, "id")),Type.ARTICLE);
         List<Likes> likes = likesPage.toList();
         List<LikeUserDTO> likeUserDTOS = new ArrayList<>();
         for (Likes like : likes) {

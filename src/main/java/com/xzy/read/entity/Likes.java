@@ -1,11 +1,9 @@
 package com.xzy.read.entity;
 
+import com.xzy.read.entity.enums.Type;
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * @author XieZhongYi
@@ -21,8 +19,11 @@ public class Likes {
 
     private Long userId;
 
-    private Long articleId;
+    private Long typeId;
 
     private Boolean status;
+
+    @Enumerated(EnumType.STRING)
+    private Type type;
 
 }
