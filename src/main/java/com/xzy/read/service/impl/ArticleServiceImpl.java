@@ -307,9 +307,10 @@ public class ArticleServiceImpl implements ArticleService {
         List<Article> articleList = articleRepository.findAllByIdIn(ids);
         List<SimpleArticleDTO> articles = new ArrayList<>();
         for (Article article : articleList) {
+            User articleUser = userService.findById(article.getUserId());
             SimpleArticleDTO simpleArticleDTO = new SimpleArticleDTO(
                     article.getId(),article.getTitle(),removeHtml(article.getContent()),
-                    user.getId(),user.getNickname(),
+                    articleUser.getId(),articleUser.getNickname(),
                     articleRepository.countCommentsByArticleId(article.getId()),article.getLikes()
             );
             articles.add(simpleArticleDTO);
