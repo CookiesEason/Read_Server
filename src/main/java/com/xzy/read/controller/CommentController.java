@@ -2,6 +2,7 @@ package com.xzy.read.controller;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Comment;
+import com.xzy.read.entity.Likes;
 import com.xzy.read.entity.Reply;
 import com.xzy.read.service.CommentService;
 import com.xzy.read.service.ReplyService;
@@ -39,6 +40,11 @@ public class CommentController {
         return commentService.deleteComment(comment);
     }
 
+    @PutMapping("/comment/like")
+    public void likeComment(@RequestBody Likes likes) {
+        commentService.like(likes);
+    }
+
     @PostMapping("/reply")
     public ResultVo reply(@RequestBody Reply reply) {
         return replyService.reply(reply);
@@ -48,4 +54,10 @@ public class CommentController {
     public ResultVo deleteReply(@RequestBody Reply reply) {
         return replyService.deleteReply(reply);
     }
+
+    @PutMapping("/reply/like")
+    public void likeReply(@RequestBody Likes likes) {
+        replyService.like(likes);
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.xzy.read.service;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.entity.Likes;
 import com.xzy.read.entity.Reply;
 
 import java.util.List;
@@ -16,5 +17,7 @@ public interface ReplyService {
     ResultVo deleteReply(Reply reply);
 
     List<Reply> findAllByCommentId(Long commentId);
+
+    void like(Likes l);
 
 }

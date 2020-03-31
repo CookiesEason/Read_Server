@@ -2,6 +2,7 @@ package com.xzy.read.service;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Comment;
+import com.xzy.read.entity.Likes;
 
 
 /**
@@ -15,5 +16,7 @@ public interface CommentService  {
     ResultVo deleteComment(Comment comment);
 
     ResultVo getCommentsByArticleId(Long articleId, int page);
+
+    void like(Likes likes);
 
 }

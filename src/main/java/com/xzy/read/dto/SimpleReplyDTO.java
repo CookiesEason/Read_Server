@@ -23,7 +23,11 @@ public class SimpleReplyDTO {
 
     private String toNickname;
 
+    private Long id;
+
     private String content;
+
+    private Long likes;
 
     private Timestamp createDate;
 

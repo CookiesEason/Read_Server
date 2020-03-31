@@ -26,6 +26,8 @@ public class Comment {
 
     private Long articleId;
 
+    private Long likes = 0L;
+
     @CreatedDate
     private Timestamp createdDate;
 

@@ -2,10 +2,10 @@ package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.SimpleReplyDTO;
-import com.xzy.read.entity.Article;
-import com.xzy.read.entity.Reply;
-import com.xzy.read.entity.User;
+import com.xzy.read.entity.*;
+import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
+import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.repository.ReplyRepository;
 import com.xzy.read.service.ReplyService;
 import com.xzy.read.service.UserService;
@@ -29,10 +29,13 @@ public class ReplyServiceImpl implements ReplyService {
 
     private UserService userService;
 
-    public ReplyServiceImpl(ReplyRepository replyRepository, ArticleRepository articleRepository, UserService userService) {
+    private LikeRepository likeRepository;
+
+    public ReplyServiceImpl(ReplyRepository replyRepository, ArticleRepository articleRepository, UserService userService, LikeRepository likeRepository) {
         this.replyRepository = replyRepository;
         this.articleRepository = articleRepository;
         this.userService = userService;
+        this.likeRepository = likeRepository;
     }
 
     @Override
@@ -43,7 +46,7 @@ public class ReplyServiceImpl implements ReplyService {
         SimpleReplyDTO simpleReplyDTO = new SimpleReplyDTO(
                 fromUser.getId(),fromUser.getNickname(),fromUser.getHeadUrl(),
                 toUser.getId(),toUser.getNickname(),
-                reply.getContent(),reply.getCreatedDate()
+                reply.getId(),reply.getContent(),reply.getLikes(),reply.getCreatedDate()
         );
         Optional<Article> articleOptional = articleRepository.findById(reply.getArticleId());
         if (articleOptional.isPresent()) {
@@ -63,4 +66,40 @@ public class ReplyServiceImpl implements ReplyService {
     public List<Reply> findAllByCommentId(Long commentId) {
         return replyRepository.findAllByCommentId(commentId);
     }
+
+    @Override
+    public void like(Likes l) {
+        Likes like = likeRepository.findByTypeIdAndUserIdAndType(l.getTypeId(),l.getUserId(), Type.REPLY);
+        if (like != null) {
+            like.setStatus(!like.getStatus());
+            if (like.getStatus()) {
+                addLikeCount(like.getTypeId());
+            } else  {
+                delLikeCount(like.getTypeId());
+            }
+            likeRepository.save(like);
+        } else {
+            l.setStatus(true);
+            l.setType(Type.REPLY);
+            addLikeCount(l.getTypeId());
+            likeRepository.save(l);
+        }
+    }
+
+    private void addLikeCount(Long id) {
+        Optional<Reply> optionalReply = replyRepository.findById(id);
+        if (optionalReply.isPresent()) {
+            optionalReply.get().setLikes(optionalReply.get().getLikes()+1);
+            replyRepository.save(optionalReply.get());
+        }
+    }
+
+    private void delLikeCount(Long id) {
+        Optional<Reply> optionalReply = replyRepository.findById(id);
+        if (optionalReply.isPresent()) {
+            optionalReply.get().setLikes(optionalReply.get().getLikes()-1);
+            replyRepository.save(optionalReply.get());
+        }
+    }
+
 }

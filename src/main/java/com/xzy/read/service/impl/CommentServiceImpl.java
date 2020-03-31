@@ -5,12 +5,11 @@ import com.xzy.read.dto.CommentDTO;
 import com.xzy.read.dto.PageDTO;
 import com.xzy.read.dto.SimpleCommentDTO;
 import com.xzy.read.dto.SimpleReplyDTO;
-import com.xzy.read.entity.Article;
-import com.xzy.read.entity.Comment;
-import com.xzy.read.entity.Reply;
-import com.xzy.read.entity.User;
+import com.xzy.read.entity.*;
+import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CommentRepository;
+import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.service.CommentService;
 import com.xzy.read.service.ReplyService;
 import com.xzy.read.service.UserService;
@@ -41,11 +40,14 @@ public class CommentServiceImpl implements CommentService {
 
     private ReplyService replyService;
 
-    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService) {
+    private LikeRepository likeRepository;
+
+    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService, LikeRepository likeRepository) {
         this.commentRepository = commentRepository;
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.replyService = replyService;
+        this.likeRepository = likeRepository;
     }
 
     @Override
@@ -53,7 +55,8 @@ public class CommentServiceImpl implements CommentService {
         comment = commentRepository.save(comment);
         User user = userService.findById(comment.getUserId());
         SimpleCommentDTO simpleCommentDTO = new SimpleCommentDTO(
-                user.getId(),user.getNickname(), user.getHeadUrl(), comment.getContent(),comment.getCreatedDate()
+                user.getId(),user.getNickname(), user.getHeadUrl(), comment.getId(),comment.getContent(),
+                false,comment.getLikes(),comment.getCreatedDate()
         );
         Optional<Article> articleOptional = articleRepository.findById(comment.getArticleId());
         if (articleOptional.isPresent()) {
@@ -72,23 +75,30 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public ResultVo getCommentsByArticleId(Long articleId, int page) {
         Page<Comment> commentPage = commentRepository.findAllByArticleId(articleId,
-                PageRequest.of(page-1, 10,Sort.by(Sort.Direction.DESC,"createdDate")));
+                PageRequest.of(page-1, 5,Sort.by(Sort.Direction.DESC,"createdDate")));
         List<Comment> commentList = commentPage.toList();
         List<CommentDTO> all = new ArrayList<>();
-        List<SimpleReplyDTO> simpleReplyDTOS = new ArrayList<>();
+        Long userId = userService.getUserId();
         for (Comment comment : commentList) {
             User user = userService.findById(comment.getUserId());
+            Boolean isLike = false;
+            if (userId != null) {
+                isLike = likeRepository.
+                        existsByTypeIdAndUserIdAndStatusAndType(comment.getId(), userId,true,Type.COMMENT);
+            }
             SimpleCommentDTO simpleCommentDTO = new SimpleCommentDTO(
-                    user.getId(),user.getNickname(), user.getHeadUrl(), comment.getContent(),comment.getCreatedDate()
+                    user.getId(),user.getNickname(), user.getHeadUrl(), comment.getId(), comment.getContent(),
+                    isLike,comment.getLikes(),comment.getCreatedDate()
             );
             List<Reply> replyList = replyService.findAllByCommentId(comment.getId());
+            List<SimpleReplyDTO> simpleReplyDTOS = new ArrayList<>();
             for (Reply reply : replyList) {
                 User fromUser = userService.findById(reply.getFromUserId());
                 User toUser = userService.findById(reply.getToUserId());
                 SimpleReplyDTO simpleReplyDTO = new SimpleReplyDTO(
                         fromUser.getId(),fromUser.getNickname(),fromUser.getHeadUrl(),
                         toUser.getId(),toUser.getNickname(),
-                        reply.getContent(),reply.getCreatedDate()
+                        reply.getId(),reply.getContent(),reply.getLikes(),reply.getCreatedDate()
                 );
                 simpleReplyDTOS.add(simpleReplyDTO);
             }
@@ -98,4 +108,40 @@ public class CommentServiceImpl implements CommentService {
         PageDTO<CommentDTO> comments = new PageDTO<>(all,commentPage.getTotalElements(),commentPage.getTotalPages());
         return ResultVoUtil.success(comments);
     }
+
+    @Override
+    public void like(Likes l) {
+        Likes like = likeRepository.findByTypeIdAndUserIdAndType(l.getTypeId(),l.getUserId(), Type.COMMENT);
+        if (like != null) {
+            like.setStatus(!like.getStatus());
+            if (like.getStatus()) {
+                addLikeCount(like.getTypeId());
+            } else  {
+                delLikeCount(like.getTypeId());
+            }
+            likeRepository.save(like);
+        } else {
+            l.setStatus(true);
+            l.setType(Type.COMMENT);
+            addLikeCount(l.getTypeId());
+            likeRepository.save(l);
+        }
+    }
+
+    private void addLikeCount(Long id) {
+        Optional<Comment> optionalComment = commentRepository.findById(id);
+        if (optionalComment.isPresent()) {
+            optionalComment.get().setLikes(optionalComment.get().getLikes()+1);
+            commentRepository.save(optionalComment.get());
+        }
+    }
+
+    private void delLikeCount(Long id) {
+        Optional<Comment> optionalComment = commentRepository.findById(id);
+        if (optionalComment.isPresent()) {
+            optionalComment.get().setLikes(optionalComment.get().getLikes()-1);
+            commentRepository.save(optionalComment.get());
+        }
+    }
+
 }

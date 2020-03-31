@@ -19,7 +19,13 @@ public class SimpleCommentDTO {
 
     private String headUrl;
 
+    private Long commentId;
+
     private String content;
+
+    private Boolean isLike;
+
+    private Long likes;
 
     private Timestamp createDate;
 

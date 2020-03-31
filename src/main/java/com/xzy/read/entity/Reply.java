@@ -30,6 +30,8 @@ public class Reply {
 
     private String content;
 
+    private Long likes = 0L;
+
     @CreatedDate
     private Timestamp createdDate;
 
