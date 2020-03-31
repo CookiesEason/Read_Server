@@ -20,6 +20,8 @@ public class ArticleDTO {
 
     private String nickname;
 
+    private String introduce;
+
     private Boolean isFollowed;
 
     private Article article;
@@ -31,5 +33,11 @@ public class ArticleDTO {
     private Long nbId;
 
     private String notebook;
+
+    private Long allLikes;
+
+    private Long allWords;
+
+    private Long fans;
 
 }

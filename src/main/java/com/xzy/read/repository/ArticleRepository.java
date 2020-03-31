@@ -27,4 +27,10 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     @Query(value = "select count(*) from comment, reply where comment.article_id = :id and reply.article_id = :id",nativeQuery = true)
     Long countCommentsByArticleId(@Param("id")Long id);
 
+    @Query(value = "select sum(words) from article where user_id = :id", nativeQuery = true)
+    Long countWordsByUserId(@Param("id")Long id);
+
+    @Query(value = "select sum(likes) from article where user_id = :id", nativeQuery = true)
+    Long countLikesByUserId(@Param("id")Long id);
+
 }

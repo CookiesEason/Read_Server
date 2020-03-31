@@ -205,9 +205,14 @@ public class ArticleServiceImpl implements ArticleService {
                 isCollected = collectionRepository.existsByArticleIdAndUserId(article.getId(),userId);
             }
             NoteBooks noteBooks = noteBooksService.findById(article.getNotebookId());
+            Long allLikes = articleRepository.countLikesByUserId(article.getUserId());
+            Long allWords = articleRepository.countWordsByUserId(article.getUserId());
+            Long fans = followersService.countFans(article.getUserId());
             ArticleDTO articleDTO = new ArticleDTO(
-                    user.getId(),user.getHeadUrl(),user.getNickname(),isFollowed,article,
-                    isLiked, isCollected, noteBooks.getId(), noteBooks.getName()
+                    user.getId(),user.getHeadUrl(),user.getNickname(),user.getIntroduce()
+                    ,isFollowed,article,
+                    isLiked, isCollected, noteBooks.getId(), noteBooks.getName(),
+                    allLikes, allWords, fans
             );
             return ResultVoUtil.success(articleDTO);
         }
