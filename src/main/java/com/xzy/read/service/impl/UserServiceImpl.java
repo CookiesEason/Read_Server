@@ -1,7 +1,14 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.dto.PageDTO;
+import com.xzy.read.dto.RecommendSimpleArticle;
+import com.xzy.read.dto.RecommendUserDTO;
+import com.xzy.read.dto.SimpleArticleDTO;
+import com.xzy.read.entity.Article;
 import com.xzy.read.entity.User;
+import com.xzy.read.repository.ArticleRepository;
+import com.xzy.read.repository.FollowersRepository;
 import com.xzy.read.repository.UserRepository;
 import com.xzy.read.service.FileService;
 import com.xzy.read.service.UserService;
@@ -9,7 +16,9 @@ import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,6 +27,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,10 +47,16 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
     private final FileService fileService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, FileService fileService) {
+    private ArticleRepository articleRepository;
+
+    private FollowersRepository followersRepository;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, FileService fileService, ArticleRepository articleRepository, FollowersRepository followersRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.fileService = fileService;
+        this.articleRepository = articleRepository;
+        this.followersRepository = followersRepository;
     }
 
     @Override
@@ -150,6 +167,35 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         u.setTelephone(user.getTelephone());
         userRepository.save(u);
         return ResultVoUtil.success();
+    }
+
+    @Override
+    public ResultVo recommendUsers(int size, int page) {
+        Page<Object[]> hotUsersPage = userRepository.findHotUsers(PageRequest.of(page,size,
+                Sort.by(Sort.Direction.DESC, "words", "likes")));
+        List<Object[]> usersObject = hotUsersPage.toList();
+        List<RecommendUserDTO> recommendUserDTOS = new ArrayList<>();
+        Long userId = getUserId();
+        for (Object[] objects : usersObject) {
+            boolean isFollowed = false;
+            BigInteger bi = new BigInteger(objects[0].toString());
+            if (userId != null) {
+                isFollowed = followersRepository.countByFromUserIdAndToUserIdAndStatus(userId, bi.longValue(),true) > 0;
+            }
+            Page<Article> articlePage = articleRepository.findAllByUserIdAndIsPublishedAndIsDeleted(bi.longValue(),
+                    true, false,PageRequest.of(0,3,Sort.by(Sort.Direction.DESC,"createdDate")));
+            List<RecommendSimpleArticle> articleDTOS = new ArrayList<>();
+            for (Article article : articlePage.toList()) {
+                RecommendSimpleArticle simpleArticleDTO = new RecommendSimpleArticle(article.getId(), article.getTitle());
+                articleDTOS.add(simpleArticleDTO);
+            }
+            RecommendUserDTO recommendUserDTO = new RecommendUserDTO((BigInteger) objects[0],(String) objects[1],(String) objects[2],
+                    (String) objects[3],(String) objects[4],(BigDecimal) objects[5],(BigDecimal ) objects[6],
+                    isFollowed,articleDTOS);
+            recommendUserDTOS.add(recommendUserDTO);
+        }
+        PageDTO<RecommendUserDTO> pageDTO = new PageDTO<>(recommendUserDTOS, hotUsersPage.getTotalElements(), hotUsersPage.getTotalPages());
+        return ResultVoUtil.success(pageDTO);
     }
 
 

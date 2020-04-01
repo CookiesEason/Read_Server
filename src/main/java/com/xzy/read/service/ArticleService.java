@@ -56,6 +56,6 @@ public interface ArticleService {
 
     ResultVo findCollections();
 
-
+    ResultVo findHotArticles(int page);
 
 }

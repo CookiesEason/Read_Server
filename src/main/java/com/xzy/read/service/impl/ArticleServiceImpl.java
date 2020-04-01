@@ -318,6 +318,26 @@ public class ArticleServiceImpl implements ArticleService {
         return ResultVoUtil.success(articles);
     }
 
+    @Override
+    public ResultVo findHotArticles(int page) {
+        Page<Article> articlePage = articleRepository.findAllByIsPublished(true,
+                PageRequest.of(page-1,5,Sort.by(Sort.Direction.DESC,"likes","clicks")));
+        List<Article> articleList = articlePage.toList();
+        List<SimpleArticleDTO> articleDTOS = new ArrayList<>();
+        for (Article article : articleList) {
+            User user = userService.findById(article.getUserId());
+            SimpleArticleDTO simpleArticleDTO = new SimpleArticleDTO(
+                   article.getId(), article.getTitle(), removeHtml(article.getContent()),
+                    user.getId(), user.getNickname(),articleRepository.countCommentsByArticleId(article.getId()),article.getLikes()
+            );
+            articleDTOS.add(simpleArticleDTO);
+        }
+        PageDTO<SimpleArticleDTO> pageDTO = new PageDTO<>(articleDTOS,
+                articlePage.getTotalElements(), articlePage.getTotalPages());
+        return ResultVoUtil.success(pageDTO);
+    }
+
+
     private void addLikeCount(Long id) {
         Optional<Article> articleOptional = articleRepository.findById(id);
         if (articleOptional.isPresent()) {

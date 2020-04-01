@@ -87,6 +87,11 @@ public class ArticleController {
         return articleService.findArticleById(id);
     }
 
+    @GetMapping("/p/hot")
+    public ResultVo getHotArticles(@RequestParam(defaultValue = "1") int page) {
+        return articleService.findHotArticles(page);
+    }
+
     @GetMapping("/p/user/{id}")
     public ResultVo getUserArticle(@PathVariable Long id) {
         return articleService.findSomeArticles(id);

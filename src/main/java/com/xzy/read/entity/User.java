@@ -31,9 +31,9 @@ public class User {
 
     private String headUrl;
 
-    private String sex;
+    private String sex = "保密";
 
-    private String introduce;
+    private String introduce = "";
 
     private String role;
 

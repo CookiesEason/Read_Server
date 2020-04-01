@@ -28,4 +28,6 @@ public interface UserService {
 
     ResultVo resetTelephone(User user);
 
+    ResultVo recommendUsers(int size, int page);
+
 }
