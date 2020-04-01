@@ -41,7 +41,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     private FileService fileService;
 
-    private FollowersService followersService;
+    private FollowService followersService;
 
     private NoteBooksService noteBooksService;
 
@@ -49,7 +49,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     private CollectionRepository collectionRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowersService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
