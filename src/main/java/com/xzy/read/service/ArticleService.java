@@ -58,4 +58,6 @@ public interface ArticleService {
 
     ResultVo findHotArticles(int page);
 
+    ResultVo getArticleByName(String name,Long topicId);
+
 }

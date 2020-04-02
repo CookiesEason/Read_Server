@@ -26,6 +26,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     List<Article> findAllByIdIn(List<Long> id);
 
+    List<Article> findAllByTitleLikeAndIsPublishedAndIsDeletedAndUserId(String title, Boolean isPublished, Boolean isDeleted,Long userId);
+
     Page<Article> findAllByUserIdAndIsPublishedAndIsDeleted(Long userId, Boolean isPublished, Boolean isDelete, Pageable pageable);
 
     Page<Article> findAllByIsPublished(Boolean isPublished, Pageable pageable);

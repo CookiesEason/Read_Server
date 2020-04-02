@@ -1,15 +1,13 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
-import com.xzy.read.dto.ArticleDTO;
-import com.xzy.read.dto.LikeUserDTO;
-import com.xzy.read.dto.PageDTO;
-import com.xzy.read.dto.SimpleArticleDTO;
+import com.xzy.read.dto.*;
 import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CollectionRepository;
 import com.xzy.read.repository.LikeRepository;
+import com.xzy.read.repository.TopicArticleRepository;
 import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
@@ -49,7 +47,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private CollectionRepository collectionRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository) {
+    private TopicArticleRepository topicArticleRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
@@ -57,6 +57,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.noteBooksService = noteBooksService;
         this.likeRepository = likeRepository;
         this.collectionRepository = collectionRepository;
+        this.topicArticleRepository = topicArticleRepository;
     }
 
     @Override
@@ -195,6 +196,8 @@ public class ArticleServiceImpl implements ArticleService {
         Optional<Article> articleOptional = articleRepository.findById(id);
         Long userId = userService.getUserId();
         if (articleOptional.isPresent()) {
+            articleOptional.get().setClicks(articleOptional.get().getClicks()+1);
+            articleRepository.save(articleOptional.get());
             boolean isLiked = false, isCollected = false, isFollowed = false;
             Article article = articleOptional.get();
             User user = userService.findById(article.getUserId());
@@ -335,6 +338,21 @@ public class ArticleServiceImpl implements ArticleService {
         PageDTO<SimpleArticleDTO> pageDTO = new PageDTO<>(articleDTOS,
                 articlePage.getTotalElements(), articlePage.getTotalPages());
         return ResultVoUtil.success(pageDTO);
+    }
+
+    @Override
+    public ResultVo getArticleByName(String name, Long topicId) {
+        List<Article> articleList = articleRepository.findAllByTitleLikeAndIsPublishedAndIsDeletedAndUserId(
+                "%"+name+"%", true, false,userService.getUserId());
+        List<SimpleArticle2DTO> articles = new ArrayList<>();
+        for (Article article : articleList) {
+            boolean isCollected = topicArticleRepository
+                    .existsByArticleIdAndIsPassedAndTopicId(article.getId(),true,topicId);
+            SimpleArticle2DTO simpleArticle2DTO = new SimpleArticle2DTO(article.getId(), article.getTitle(),
+                    isCollected);
+            articles.add(simpleArticle2DTO);
+        }
+        return ResultVoUtil.success(articles);
     }
 
 

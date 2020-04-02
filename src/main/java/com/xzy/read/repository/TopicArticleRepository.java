@@ -15,7 +15,9 @@ public interface TopicArticleRepository extends JpaRepository<TopicArticle, Long
 
     Boolean existsByArticleIdAndIsPassedAndTopicId(Long articleId, Boolean isPassed, Long topicId);
 
-    void deleteByArticleIdAndTopicId(Long ArticleId, Long topicId);
+    Boolean existsByArticleIdAndTopicId(Long articleId, Long topicId);
+
+    void deleteByArticleIdAndTopicId(Long articleId, Long topicId);
 
     Long countByTopicIdAndIsPassed(Long topicId, Boolean isPassed);
 

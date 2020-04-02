@@ -14,7 +14,9 @@ public interface FollowsRepository extends JpaRepository<Follows, Long> {
 
     Follows findByTypeIdAndUserIdAndFollowType(Long typeId, Long userId, FollowType followType);
 
-    Long countByTypeIdAndFollowType(Long typeId, FollowType followType);
+    Long countByTypeIdAndFollowTypeAndStatus(Long typeId, FollowType followType, Boolean status);
+
+    Boolean existsByTypeIdAndFollowTypeAndStatusAndUserId(Long typeId, FollowType followType, Boolean status, Long userId);
 
     Page<Follows> findAllByTypeIdAndStatusAndFollowType(Long typeId, Boolean status, FollowType followType, Pageable pageable);
 

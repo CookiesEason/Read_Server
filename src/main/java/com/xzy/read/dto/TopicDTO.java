@@ -31,4 +31,9 @@ public class TopicDTO {
 
     private Boolean isFollowed;
 
+    private Boolean isSubmit;
+
+    private Boolean isVerify;
+
+
 }

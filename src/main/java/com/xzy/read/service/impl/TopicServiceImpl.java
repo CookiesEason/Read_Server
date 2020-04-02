@@ -6,7 +6,9 @@ import com.xzy.read.entity.Article;
 import com.xzy.read.entity.Topic;
 import com.xzy.read.entity.TopicArticle;
 import com.xzy.read.entity.User;
+import com.xzy.read.entity.enums.FollowType;
 import com.xzy.read.repository.ArticleRepository;
+import com.xzy.read.repository.FollowsRepository;
 import com.xzy.read.repository.TopicArticleRepository;
 import com.xzy.read.repository.TopicRepository;
 import com.xzy.read.service.TopicService;
@@ -39,11 +41,14 @@ public class TopicServiceImpl implements TopicService {
 
     private ArticleRepository articleRepository;
 
-    public TopicServiceImpl(TopicRepository topicRepository, TopicArticleRepository topicArticleRepository, UserService userService, ArticleRepository articleRepository) {
+    private FollowsRepository followsRepository;
+
+    public TopicServiceImpl(TopicRepository topicRepository, TopicArticleRepository topicArticleRepository, UserService userService, ArticleRepository articleRepository, FollowsRepository followsRepository) {
         this.topicRepository = topicRepository;
         this.topicArticleRepository = topicArticleRepository;
         this.userService = userService;
         this.articleRepository = articleRepository;
+        this.followsRepository = followsRepository;
     }
 
     @Override
@@ -51,11 +56,17 @@ public class TopicServiceImpl implements TopicService {
         Optional<Topic> topicOptional = topicRepository.findById(id);
         if (topicOptional.isPresent()) {
             Topic topic = topicOptional.get();
+            boolean isFollowed = false;
+            Long userId = userService.getUserId();
+            if (userId != null) {
+                isFollowed =  followsRepository.existsByTypeIdAndFollowTypeAndStatusAndUserId(topic.getId(),FollowType.TOPIC,true, userId);
+            }
             User u = userService.findById(topic.getUserId());
             TopicDTO topicDTO = new TopicDTO(topic.getId(), topic.getHeadUrl(), topic.getName(),
                     topic.getIntroduce(),topic.getUserId(),u.getHeadUrl(),u.getNickname(),
                     topicArticleRepository.countByTopicIdAndIsPassed(topic.getId(),true),
-                    0L,false);
+                    followsRepository.countByTypeIdAndFollowTypeAndStatus(topic.getId(), FollowType.TOPIC, true),
+                    isFollowed, topic.getIsSubmit(), topic.getIsVerify());
             return ResultVoUtil.success(topicDTO);
         }
         return ResultVoUtil.error(0,"专题不存在");
@@ -63,8 +74,8 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public ResultVo save(Topic topic) {
-        topicRepository.save(topic);
-        return ResultVoUtil.success();
+        topic =  topicRepository.save(topic);
+        return ResultVoUtil.success(topic.getId());
     }
 
     @Override
@@ -102,6 +113,11 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public ResultVo submit(TopicArticle topicArticle) {
+        boolean isExisted = topicArticleRepository.
+                existsByArticleIdAndTopicId(topicArticle.getArticleId(), topicArticle.getTopicId());
+        if(isExisted) {
+            return ResultVoUtil.error(0,"请勿重复投稿");
+        }
         Optional<Topic> topicOptional = topicRepository.findById(topicArticle.getTopicId());
         if (topicOptional.isPresent()) {
             Topic topic = topicOptional.get();
@@ -139,7 +155,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public ResultVo getAllArticles(Long topicId,int page) {
         Page<TopicArticle> topicArticlePage = topicArticleRepository.findAllByTopicIdAndIsPassed(topicId,
-                true, PageRequest.of(page-1,10, Sort.by(Sort.Direction.DESC,"id")));
+                true, PageRequest.of(page-1,4, Sort.by(Sort.Direction.DESC,"id")));
         List<SimpleArticleDTO> articleDTOS = new ArrayList<>();
         for (TopicArticle topicArticle : topicArticlePage.toList()) {
             Optional<Article> articleOptional = articleRepository.findById(topicArticle.getArticleId());

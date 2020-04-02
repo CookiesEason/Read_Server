@@ -86,7 +86,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Long countFansByType(Long typeId, FollowType followType) {
-        return followsRepository.countByTypeIdAndFollowType(typeId, followType);
+        return followsRepository.countByTypeIdAndFollowTypeAndStatus(typeId, followType, true);
     }
 
     @Override
