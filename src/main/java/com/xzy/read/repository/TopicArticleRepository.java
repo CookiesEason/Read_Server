@@ -25,4 +25,6 @@ public interface TopicArticleRepository extends JpaRepository<TopicArticle, Long
 
     Page<TopicArticle> findAllByTopicIdAndIsPassed(Long topicId, Boolean isPassed, Pageable pageable);
 
+    Page<TopicArticle> findAllByArticleIdAndIsPassed(Long articleId, Boolean isPassed, Pageable pageable);
+
 }

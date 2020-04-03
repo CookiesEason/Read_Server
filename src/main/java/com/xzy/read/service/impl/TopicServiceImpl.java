@@ -98,6 +98,19 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public ResultVo findTopicsByArticleId(Long articleId, int page) {
+        Page<TopicArticle> topicArticlePage = topicArticleRepository
+                .findAllByArticleIdAndIsPassed(articleId,true, PageRequest.of(page-1,1));
+        List<Topic> topics = new ArrayList<>();
+        for (TopicArticle topicArticle : topicArticlePage.toList()) {
+           Optional<Topic> topicOptional =  topicRepository.findById(topicArticle.getTopicId());
+            topicOptional.ifPresent(topics::add);
+        }
+        PageDTO<Topic> topicPageDTO = new PageDTO<>(topics, topicArticlePage.getTotalElements(), topicArticlePage.getTotalPages());
+        return ResultVoUtil.success(topicPageDTO);
+    }
+
+    @Override
     public ResultVo collect(TopicArticle topicArticle) {
         topicArticle.setIsPassed(true);
         topicArticleRepository.save(topicArticle);

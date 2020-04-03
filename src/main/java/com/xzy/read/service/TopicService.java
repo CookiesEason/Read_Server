@@ -20,6 +20,9 @@ public interface TopicService {
 
     ResultVo search(Long articleId,String name);
 
+
+    ResultVo findTopicsByArticleId(Long articleId, int page);
+
     /**
      * 收入文章
      * @param topicArticle

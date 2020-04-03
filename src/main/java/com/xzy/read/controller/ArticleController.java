@@ -5,6 +5,7 @@ import com.xzy.read.entity.Article;
 import com.xzy.read.entity.Collection;
 import com.xzy.read.entity.Likes;
 import com.xzy.read.service.ArticleService;
+import com.xzy.read.service.TopicService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,8 +19,11 @@ public class ArticleController {
 
     private ArticleService articleService;
 
-    public ArticleController(ArticleService articleService) {
+    private TopicService topicService;
+
+    public ArticleController(ArticleService articleService, TopicService topicService) {
         this.articleService = articleService;
+        this.topicService = topicService;
     }
 
     @GetMapping("/articles")
@@ -30,6 +34,11 @@ public class ArticleController {
     @GetMapping("/articles/one")
     public ResultVo findByArticleId(Long id) {
         return articleService.findById(id);
+    }
+
+    @GetMapping("/articles/topic")
+    public ResultVo findTopicByArticleId(Long articleId, @RequestParam(defaultValue = "1") int page) {
+        return topicService.findTopicsByArticleId(articleId, page);
     }
 
     @PostMapping("/articles")
