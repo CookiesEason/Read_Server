@@ -24,6 +24,16 @@ public class NoteBooksController {
         return noteBooksService.getAll();
     }
 
+    @GetMapping("/notebooks/{id}")
+    public ResultVo getNotebookInfo(@PathVariable Long id) {
+        return noteBooksService.getSimpleInfo(id);
+    }
+
+    @GetMapping("/notebooks/{id}/articles")
+    public ResultVo getNotebookArticles(@PathVariable Long id,@RequestParam(defaultValue = "1") int page) {
+        return noteBooksService.getArticlesByNbId(id, page);
+    }
+
     @PostMapping("/notebooks")
     public ResultVo create(@RequestBody NoteBooks noteBooks) {
         return noteBooksService.create(noteBooks);

@@ -41,4 +41,11 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     @Query(value = "select sum(likes) from article where user_id = :id", nativeQuery = true)
     Long countLikesByUserId(@Param("id")Long id);
 
+    Long countByNotebookId(Long notebookId);
+
+    @Query(value = "select sum(words) from article where notebook_id = :id and is_deleted = false", nativeQuery = true)
+    Long countWordsByNotebookId(@Param("id") Long notebookId);
+
+    Page<Article> findAllByNotebookIdAndIsDeleted(Long nbId, Boolean isDeleted, Pageable pageable);
+
 }

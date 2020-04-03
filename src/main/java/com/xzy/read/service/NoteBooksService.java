@@ -19,4 +19,8 @@ public interface NoteBooksService {
 
     NoteBooks findById(Long id);
 
+    ResultVo getSimpleInfo(Long id);
+
+    ResultVo getArticlesByNbId(Long id, int page);
+
 }

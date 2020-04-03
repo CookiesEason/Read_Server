@@ -48,4 +48,9 @@ public class FollowController {
         return followersService.followerByType(page, size,typeId,FollowType.TOPIC);
     }
 
+    @PutMapping("/follow/notebook")
+    public ResultVo followNb(@RequestBody Follows follows) {
+        return followersService.follow(follows, FollowType.NOTEBOOK);
+    }
+
 }
