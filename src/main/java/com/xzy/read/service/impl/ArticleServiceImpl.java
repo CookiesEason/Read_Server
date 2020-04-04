@@ -278,6 +278,30 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    public ResultVo likeArticles(Long userId, int page) {
+        Page<Likes> likesPage = likeRepository.findAllByUserIdAndStatusAndType(userId,true,
+                PageRequest.of(page-1,4,Sort.by(Sort.Direction.DESC, "id")), Type.ARTICLE);
+        List<Long> ids = new ArrayList<>();
+        for (Likes likes : likesPage.toList()) {
+            ids.add(likes.getTypeId());
+        }
+        List<Article> articles = articleRepository.findAllByIdIn(ids);
+        List<LikeArticleDTO> likeArticleDTOS = new ArrayList<>();
+        for (Article article : articles) {
+            User user = userService.findById(article.getUserId());
+            LikeArticleDTO articleDTO = new LikeArticleDTO(
+                    user.getId(),user.getHeadUrl(),user.getNickname(),
+                    article.getCreatedDate(), article.getId(),article.getTitle(), removeHtml(article.getContent()),
+                    article.getClicks(),articleRepository.countCommentsByArticleId(article.getId()), article.getLikes()
+            );
+            likeArticleDTOS.add(articleDTO);
+        }
+        PageDTO<LikeArticleDTO> likeArticleDTOPageDTO = new PageDTO<>(likeArticleDTOS, likesPage.getTotalElements(),
+                likesPage.getTotalPages());
+        return ResultVoUtil.success(likeArticleDTOPageDTO);
+    }
+
+    @Override
     public void addClickCount(Article article) {
         Optional<Article> articleOptional = articleRepository.findById(article.getId());
         if (articleOptional.isPresent()) {

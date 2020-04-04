@@ -18,4 +18,6 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
 
     Page<Likes> findAllByTypeIdAndStatusAndType(Long typeId, Boolean status, Pageable pageable, Type type);
 
+    Page<Likes> findAllByUserIdAndStatusAndType(Long userId, Boolean status, Pageable pageable, Type type);
+
 }

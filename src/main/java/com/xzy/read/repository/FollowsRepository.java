@@ -20,4 +20,6 @@ public interface FollowsRepository extends JpaRepository<Follows, Long> {
 
     Page<Follows> findAllByTypeIdAndStatusAndFollowType(Long typeId, Boolean status, FollowType followType, Pageable pageable);
 
+    Page<Follows> findAllByUserIdAndStatusOrderByCreatedDateDesc(Long userId, Boolean status, Pageable pageable);
+
 }

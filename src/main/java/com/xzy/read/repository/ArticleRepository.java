@@ -32,6 +32,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     Page<Article> findAllByIsPublished(Boolean isPublished, Pageable pageable);
 
+    Long countAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+
     @Query(value = "select count(*) from comment, reply where comment.article_id = :id and reply.article_id = :id",nativeQuery = true)
     Long countCommentsByArticleId(@Param("id")Long id);
 

@@ -13,4 +13,5 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     List<Topic> findAllByNameLikeAndUserId(String name, Long userId);
 
+    List<Topic> findAllByUserId(Long userId);
 }

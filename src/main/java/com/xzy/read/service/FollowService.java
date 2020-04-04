@@ -25,5 +25,6 @@ public interface FollowService {
 
     ResultVo followerByType(int page, int size, Long typeId,FollowType followType);
 
+    ResultVo findAllTopicsByUserId(Long userId, int page);
 
 }

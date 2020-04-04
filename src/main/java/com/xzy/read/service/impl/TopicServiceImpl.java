@@ -73,6 +73,11 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public List<Topic> getAllTopicsByUserId(Long userId) {
+        return topicRepository.findAllByUserId(userId);
+    }
+
+    @Override
     public ResultVo save(Topic topic) {
         topic =  topicRepository.save(topic);
         return ResultVoUtil.success(topic.getId());

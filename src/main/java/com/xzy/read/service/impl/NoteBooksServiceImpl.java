@@ -135,6 +135,11 @@ public class NoteBooksServiceImpl implements NoteBooksService {
         return ResultVoUtil.success(pageDTO);
     }
 
+    @Override
+    public List<NoteBooks> findAllByUserId(Long userId) {
+        return noteBooksRepository.findAllByUserIdAndIsDeleted(userId, false);
+    }
+
     private String removeHtml (String content) {
         if (content == null) {
             return "";

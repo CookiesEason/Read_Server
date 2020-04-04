@@ -1,10 +1,7 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
-import com.xzy.read.dto.PageDTO;
-import com.xzy.read.dto.RecommendSimpleArticle;
-import com.xzy.read.dto.RecommendUserDTO;
-import com.xzy.read.dto.SimpleArticleDTO;
+import com.xzy.read.dto.*;
 import com.xzy.read.entity.Article;
 import com.xzy.read.entity.User;
 import com.xzy.read.repository.ArticleRepository;
@@ -85,6 +82,25 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     public User findById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         return userOptional.orElse(null);
+    }
+
+    @Override
+    public ResultVo basicUserInfo(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Long followers = followersRepository.countAllByFromUserIdAndStatus(userId, true);
+            Long fans = followersRepository.countAllByToUserIdAndStatus(userId, true);
+            Long articles = articleRepository.countAllByUserIdAndIsDeleted(userId, false);
+            Long words = articleRepository.countWordsByUserId(userId);
+            Long likes = articleRepository.countLikesByUserId(userId);
+            boolean isFollowed = followersRepository.countByFromUserIdAndToUserIdAndStatus(getUserId(), userId, true) > 0;
+            UserInfoDTO userInfoDTO = new UserInfoDTO(userId, user.getHeadUrl(), user.getNickname(),
+                    user.getIntroduce(),
+                    followers,fans,articles,words, likes ,isFollowed);
+            return ResultVoUtil.success(userInfoDTO);
+        }
+        return ResultVoUtil.error(0, "用户不存在");
     }
 
     @Override

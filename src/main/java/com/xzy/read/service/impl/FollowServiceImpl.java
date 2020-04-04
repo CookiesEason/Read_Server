@@ -1,17 +1,15 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.dto.FollowWorkDTO;
 import com.xzy.read.dto.FollowerDTO;
 import com.xzy.read.dto.PageDTO;
-import com.xzy.read.entity.Followers;
-import com.xzy.read.entity.Follows;
-import com.xzy.read.entity.User;
+import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.FollowType;
-import com.xzy.read.repository.FollowersRepository;
-import com.xzy.read.repository.FollowsRepository;
-import com.xzy.read.repository.UserRepository;
+import com.xzy.read.repository.*;
 import com.xzy.read.service.FollowService;
 import com.xzy.read.util.ResultVoUtil;
+import com.xzy.read.util.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,10 +33,22 @@ public class FollowServiceImpl implements FollowService {
 
     private UserRepository userRepository;
 
-    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository) {
+    private TopicArticleRepository topicArticleRepository;
+
+    private ArticleRepository articleRepository;
+
+    private TopicRepository topicRepository;
+
+    private NoteBooksRepository noteBooksRepository;
+
+    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository, TopicArticleRepository topicArticleRepository, ArticleRepository articleRepository, TopicRepository topicRepository, NoteBooksRepository noteBooksRepository) {
         this.followersRepository = followersRepository;
         this.followsRepository = followsRepository;
         this.userRepository = userRepository;
+        this.topicArticleRepository = topicArticleRepository;
+        this.articleRepository = articleRepository;
+        this.topicRepository = topicRepository;
+        this.noteBooksRepository = noteBooksRepository;
     }
 
     @Override
@@ -110,5 +120,45 @@ public class FollowServiceImpl implements FollowService {
         PageDTO<FollowerDTO>followerDTOPageDTO = new PageDTO<>(followerDTOS,
                 followsPage.getTotalElements(),followsPage.getTotalPages());
         return ResultVoUtil.success(followerDTOPageDTO);
+    }
+
+    @Override
+    public ResultVo findAllTopicsByUserId(Long userId, int page) {
+        Page<Follows> followsPage = followsRepository.
+                findAllByUserIdAndStatusOrderByCreatedDateDesc(userId, true,
+                        PageRequest.of(page-1,4));
+        List<FollowWorkDTO> followWorkDTOS = new ArrayList<>();
+        for (Follows follows : followsPage.toList()) {
+            Long articles, folllowers;
+            boolean isFollowed;
+            if (follows.getFollowType().equals(FollowType.TOPIC)) {
+                 Topic topic = topicRepository.getOne(follows.getTypeId());
+                 articles = topicArticleRepository.countByTopicIdAndIsPassed(follows.getTypeId(), true);
+                 folllowers = followsRepository.countByTypeIdAndFollowTypeAndStatus(follows.getTypeId(),
+                         FollowType.TOPIC,true);
+                 isFollowed = followsRepository.existsByTypeIdAndFollowTypeAndStatusAndUserId(
+                         follows.getTypeId(),FollowType.TOPIC,true,
+                         userRepository.findIdByTelephone(SecurityUtil.getAuthentication().getName())
+                 );
+                FollowWorkDTO followWorkDTO = new FollowWorkDTO(topic.getId(), topic.getName(), topic.getHeadUrl(),
+                        articles, folllowers, isFollowed, false);
+                followWorkDTOS.add(followWorkDTO);
+            } else {
+                 NoteBooks noteBooks = noteBooksRepository.getOne(follows.getTypeId());
+                 articles = articleRepository.countByNotebookId(follows.getTypeId());
+                 folllowers = followsRepository.countByTypeIdAndFollowTypeAndStatus(follows.getTypeId(),
+                        FollowType.NOTEBOOK,true);
+                 isFollowed = followsRepository.existsByTypeIdAndFollowTypeAndStatusAndUserId(
+                        follows.getTypeId(),FollowType.NOTEBOOK,true,
+                        userRepository.findIdByTelephone(SecurityUtil.getAuthentication().getName())
+                 );
+                FollowWorkDTO followWorkDTO = new FollowWorkDTO(noteBooks.getId(), noteBooks.getName(), null,
+                        articles, folllowers, isFollowed, true);
+                followWorkDTOS.add(followWorkDTO);
+            }
+        }
+        PageDTO<FollowWorkDTO> followWorkDTOPageDTO = new PageDTO<>(followWorkDTOS,
+                followsPage.getTotalElements(), followsPage.getTotalPages());
+        return ResultVoUtil.success(followWorkDTOPageDTO);
     }
 }

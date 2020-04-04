@@ -4,6 +4,8 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.entity.Topic;
 import com.xzy.read.entity.TopicArticle;
 
+import java.util.List;
+
 /**
  * @author XieZhongYi
  * 2020/04/01 14:13
@@ -11,6 +13,8 @@ import com.xzy.read.entity.TopicArticle;
 public interface TopicService {
 
     ResultVo getInfoById(Long id);
+
+    List<Topic> getAllTopicsByUserId(Long userId);
 
     ResultVo getAllArticles(Long topicId,int page);
 
