@@ -1,6 +1,7 @@
 package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.dto.FollowUserDTO;
 import com.xzy.read.dto.FollowWorkDTO;
 import com.xzy.read.dto.FollowerDTO;
 import com.xzy.read.dto.PageDTO;
@@ -77,6 +78,46 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public Long countByFromUserIdAndToUserIdAndStatus(Long fromUserId, Long toUserId, Boolean status) {
         return followersRepository.countByFromUserIdAndToUserIdAndStatus(fromUserId, toUserId, status);
+    }
+
+    @Override
+    public ResultVo findAllFansByUserId(Long userId, int page) {
+        Page<Followers> followersPageDTO = followersRepository.findAllByToUserIdAndStatus(
+                userId, true, PageRequest.of(page - 1, 5,Sort.by(Sort.Direction.DESC, "id"))
+        );
+        List<FollowUserDTO> followUserDTOS = new ArrayList<>();
+        for (Followers followers : followersPageDTO.toList()) {
+            User user = userRepository.getOne(followers.getFromUserId());
+            FollowUserDTO followUserDTO = new FollowUserDTO(user.getId(),user.getHeadUrl(),user.getNickname(),
+                    countfollowers(user.getId()), countFans(user.getId()), articleRepository.countAllByUserIdAndIsDeleted(user.getId(), false),
+                    articleRepository.countWordsByUserId(user.getId()),
+                    articleRepository.countLikesByUserId(user.getId()),
+                    countByFromUserIdAndToUserIdAndStatus(userId, user.getId(), true) > 0);
+            followUserDTOS.add(followUserDTO);
+        }
+        PageDTO<FollowUserDTO> followUserDTOPageDTO = new PageDTO<>(followUserDTOS, followersPageDTO.getTotalElements(),
+                followersPageDTO.getTotalPages());
+        return ResultVoUtil.success(followUserDTOPageDTO);
+    }
+
+    @Override
+    public ResultVo findAllFollowersByUserId(Long userId, int page) {
+        Page<Followers> followersPageDTO = followersRepository.findAllByFromUserIdAndStatus(
+                userId, true, PageRequest.of(page - 1, 5,Sort.by(Sort.Direction.DESC, "id"))
+        );
+        List<FollowUserDTO> followUserDTOS = new ArrayList<>();
+        for (Followers followers : followersPageDTO.toList()) {
+            User user = userRepository.getOne(followers.getToUserId());
+            FollowUserDTO followUserDTO = new FollowUserDTO(user.getId(),user.getHeadUrl(),user.getNickname(),
+                    countfollowers(user.getId()), countFans(user.getId()), articleRepository.countAllByUserIdAndIsDeleted(user.getId(), false),
+                    articleRepository.countWordsByUserId(user.getId()),
+                    articleRepository.countLikesByUserId(user.getId()),
+                    countByFromUserIdAndToUserIdAndStatus(userId, user.getId(), true) > 0);
+            followUserDTOS.add(followUserDTO);
+        }
+        PageDTO<FollowUserDTO> followUserDTOPageDTO = new PageDTO<>(followUserDTOS, followersPageDTO.getTotalElements(),
+                followersPageDTO.getTotalPages());
+        return ResultVoUtil.success(followUserDTOPageDTO);
     }
 
     @Override

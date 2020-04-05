@@ -82,6 +82,16 @@ public class UserController {
         return followService.findAllTopicsByUserId(id,page);
     }
 
+    @GetMapping("/{id}/followers")
+    public ResultVo userFollowers(@PathVariable Long id,@RequestParam(defaultValue = "1") int page) {
+        return followService.findAllFollowersByUserId(id,page);
+    }
+
+    @GetMapping("/{id}/fans")
+    public ResultVo userFans(@PathVariable Long id,@RequestParam(defaultValue = "1") int page) {
+        return followService.findAllFansByUserId(id,page);
+    }
+
     @PostMapping("head")
     public ResultVo updateHead(@RequestParam("file") MultipartFile multipartFile) {
         return userService.uploadHead(multipartFile);

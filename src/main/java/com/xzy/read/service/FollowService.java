@@ -19,6 +19,10 @@ public interface FollowService {
 
     Long countByFromUserIdAndToUserIdAndStatus(Long fromUserId, Long toUserId, Boolean status);
 
+    ResultVo findAllFansByUserId(Long userId, int page);
+
+    ResultVo findAllFollowersByUserId(Long userId, int page);
+
     ResultVo follow(Follows follows, FollowType followType);
 
     Long countFansByType(Long typeId, FollowType followType);
