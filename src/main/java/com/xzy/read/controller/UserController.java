@@ -92,6 +92,13 @@ public class UserController {
         return followService.findAllFansByUserId(id,page);
     }
 
+    @GetMapping("/{id}/articles")
+    public ResultVo userArticlesById(@PathVariable Long id,
+                                     @RequestParam(defaultValue = "1") int page,
+                                     @RequestParam(defaultValue = "id") String order) {
+        return articleService.getUserArticlesByUserId(id, page, order);
+    }
+
     @PostMapping("head")
     public ResultVo updateHead(@RequestParam("file") MultipartFile multipartFile) {
         return userService.uploadHead(multipartFile);
