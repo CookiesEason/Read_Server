@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 /**
  * @author XieZhongYi
  * 2020/03/28 20:43
@@ -22,5 +24,7 @@ public interface FollowersRepository extends JpaRepository<Followers, Long> {
     Page<Followers> findAllByFromUserIdAndStatus(Long fromUserId, Boolean status, Pageable pageable);
 
     Page<Followers> findAllByToUserIdAndStatus(Long toUserId, Boolean status, Pageable pageable);
+
+    List<Followers> findAllByFromUserIdAndStatus(Long toUserId, Boolean status);
 
 }

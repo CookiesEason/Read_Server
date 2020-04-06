@@ -4,10 +4,7 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.*;
 import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.Type;
-import com.xzy.read.repository.ArticleRepository;
-import com.xzy.read.repository.CollectionRepository;
-import com.xzy.read.repository.LikeRepository;
-import com.xzy.read.repository.TopicArticleRepository;
+import com.xzy.read.repository.*;
 import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
@@ -20,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -49,7 +47,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private TopicArticleRepository topicArticleRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository) {
+    private TimelineRepository timelineRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
@@ -58,6 +58,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.likeRepository = likeRepository;
         this.collectionRepository = collectionRepository;
         this.topicArticleRepository = topicArticleRepository;
+        this.timelineRepository = timelineRepository;
     }
 
     @Override
@@ -173,7 +174,17 @@ public class ArticleServiceImpl implements ArticleService {
             article1.setContent(article.getContent());
             article1.setTitle(article.getTitle());
             article1.setWords(article.getWords());
+            article1.setCreatedDate(new Timestamp(System.currentTimeMillis()));
             articleRepository.save(article1);
+            List<Long> followersId = articleRepository.findFollowersByUserId(article1.getUserId());
+            List<Timeline> timelines = new ArrayList<>();
+            for (Long toUserId : followersId) {
+                Timeline timeline = new Timeline();
+                timeline.setArticleId(article1.getId());
+                timeline.setToUserId(toUserId);
+                timelines.add(timeline);
+            }
+            timelineRepository.saveAll(timelines);
             article1.setContent(removeHtml(article1.getContent()));
             return ResultVoUtil.success(article1);
         }

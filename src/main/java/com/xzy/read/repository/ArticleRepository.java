@@ -48,6 +48,9 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     @Query(value = "select sum(words) from article where notebook_id = :id and is_deleted = false", nativeQuery = true)
     Long countWordsByNotebookId(@Param("id") Long notebookId);
 
+    @Query(value = "select from_user_id from followers where to_user_id = :id and status = true", nativeQuery = true)
+    List<Long> findFollowersByUserId(@Param("id") Long userId);
+
     Page<Article> findAllByNotebookIdAndIsDeleted(Long nbId, Boolean isDeleted, Pageable pageable);
 
 }

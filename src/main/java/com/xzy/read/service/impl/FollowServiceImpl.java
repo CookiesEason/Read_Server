@@ -1,16 +1,16 @@
 package com.xzy.read.service.impl;
 
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import com.xzy.read.VO.ResultVo;
-import com.xzy.read.dto.FollowUserDTO;
-import com.xzy.read.dto.FollowWorkDTO;
-import com.xzy.read.dto.FollowerDTO;
-import com.xzy.read.dto.PageDTO;
+import com.xzy.read.dto.*;
 import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.FollowType;
 import com.xzy.read.repository.*;
 import com.xzy.read.service.FollowService;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -42,7 +42,9 @@ public class FollowServiceImpl implements FollowService {
 
     private NoteBooksRepository noteBooksRepository;
 
-    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository, TopicArticleRepository topicArticleRepository, ArticleRepository articleRepository, TopicRepository topicRepository, NoteBooksRepository noteBooksRepository) {
+    private TimelineRepository timelineRepository;
+
+    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository, TopicArticleRepository topicArticleRepository, ArticleRepository articleRepository, TopicRepository topicRepository, NoteBooksRepository noteBooksRepository, TimelineRepository timelineRepository) {
         this.followersRepository = followersRepository;
         this.followsRepository = followsRepository;
         this.userRepository = userRepository;
@@ -50,6 +52,7 @@ public class FollowServiceImpl implements FollowService {
         this.articleRepository = articleRepository;
         this.topicRepository = topicRepository;
         this.noteBooksRepository = noteBooksRepository;
+        this.timelineRepository = timelineRepository;
     }
 
     @Override
@@ -201,5 +204,71 @@ public class FollowServiceImpl implements FollowService {
         PageDTO<FollowWorkDTO> followWorkDTOPageDTO = new PageDTO<>(followWorkDTOS,
                 followsPage.getTotalElements(), followsPage.getTotalPages());
         return ResultVoUtil.success(followWorkDTOPageDTO);
+    }
+
+    @Override
+    public ResultVo findArticlesByTimeline(Long userId, int page) {
+        Page<Timeline> timelinePage = timelineRepository.findAllByToUserId(userId,
+                PageRequest.of(page-1,4,Sort.by(Sort.Direction.DESC, "id")));
+        List<LikeArticleDTO> likeArticleDTOS = new ArrayList<>();
+        for (Timeline timeline : timelinePage.toList()) {
+            Article article = articleRepository.getOne(timeline.getArticleId());
+            User user = userRepository.getOne(article.getUserId());
+            LikeArticleDTO articleDTO = new LikeArticleDTO(
+                    user.getId(),user.getHeadUrl(),user.getNickname(),
+                    article.getCreatedDate(), article.getId(),article.getTitle(), removeHtml(article.getContent()),
+                    article.getClicks(),articleRepository.countCommentsByArticleId(article.getId()), article.getLikes()
+            );
+            likeArticleDTOS.add(articleDTO);
+        }
+        PageDTO<LikeArticleDTO> likeArticleDTOPageDTO = new PageDTO<>(likeArticleDTOS, timelinePage.getTotalElements(),
+                timelinePage.getTotalPages());
+        return ResultVoUtil.success(likeArticleDTOPageDTO);
+    }
+
+    @Override
+    public ResultVo findAllFollowsByUserId(Long userId, String type) {
+        List<Follows> followsList;
+        if ("notebook".equals(type)) {
+            followsList = followsRepository.findAllByUserIdAndStatusAndFollowType(userId, true, FollowType.NOTEBOOK);
+        } else if ("topic".equals(type)) {
+            followsList = followsRepository.findAllByUserIdAndStatusAndFollowType(userId, true, FollowType.TOPIC);
+
+        } else {
+            followsList = followsRepository.findAllByUserIdAndStatus(userId, true);
+        }
+        List<FollowDTO> follows = new ArrayList<>();
+        for (Follows f : followsList) {
+            if (f.getFollowType().equals(FollowType.TOPIC)) {
+                Topic topic = topicRepository.getOne(f.getTypeId());
+                FollowDTO followDTO = new FollowDTO(f.getTypeId(), topic.getName(), topic.getHeadUrl(), false);
+                follows.add(followDTO);
+            } else {
+                NoteBooks books = noteBooksRepository.getOne(f.getTypeId());
+                FollowDTO followDTO = new FollowDTO(f.getTypeId(), books.getName(), null, true);
+                follows.add(followDTO);
+            }
+        }
+        return ResultVoUtil.success(follows);
+    }
+
+    @Override
+    public ResultVo findAllFollowersByUserId(Long userId) {
+        List<Followers> followers = followersRepository.findAllByFromUserIdAndStatus(userId,true);
+        List<SimpleUserDTO> users = new ArrayList<>();
+        for (Followers follower : followers) {
+            User user = userRepository.getOne(follower.getToUserId());
+            SimpleUserDTO simpleUserDTO = new SimpleUserDTO(user.getId(), user.getHeadUrl(), user.getNickname());
+            users.add(simpleUserDTO);
+        }
+        return ResultVoUtil.success(users);
+    }
+
+    private String removeHtml (String content) {
+        if (content == null) {
+            return "";
+        }
+        Document doc = Jsoup.parse(content);
+        return doc.text();
     }
 }

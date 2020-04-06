@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 /**
  * @author XieZhongYi
  * 2020/04/01 19:14
@@ -21,5 +23,9 @@ public interface FollowsRepository extends JpaRepository<Follows, Long> {
     Page<Follows> findAllByTypeIdAndStatusAndFollowType(Long typeId, Boolean status, FollowType followType, Pageable pageable);
 
     Page<Follows> findAllByUserIdAndStatusOrderByCreatedDateDesc(Long userId, Boolean status, Pageable pageable);
+
+    List<Follows> findAllByUserIdAndStatus(Long userId, Boolean status);
+
+    List<Follows> findAllByUserIdAndStatusAndFollowType(Long userId, Boolean status,FollowType followType);
 
 }

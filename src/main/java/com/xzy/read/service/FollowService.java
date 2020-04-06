@@ -31,4 +31,10 @@ public interface FollowService {
 
     ResultVo findAllTopicsByUserId(Long userId, int page);
 
+    ResultVo findArticlesByTimeline(Long userId, int page);
+
+    ResultVo findAllFollowsByUserId(Long userId, String type);
+
+    ResultVo findAllFollowersByUserId(Long userId);
+
 }
