@@ -6,11 +6,13 @@ import com.xzy.read.dto.PageDTO;
 import com.xzy.read.dto.SimpleCommentDTO;
 import com.xzy.read.dto.SimpleReplyDTO;
 import com.xzy.read.entity.*;
+import com.xzy.read.entity.enums.MessageType;
 import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CommentRepository;
 import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.service.CommentService;
+import com.xzy.read.service.MessageService;
 import com.xzy.read.service.ReplyService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
@@ -42,12 +44,15 @@ public class CommentServiceImpl implements CommentService {
 
     private LikeRepository likeRepository;
 
-    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService, LikeRepository likeRepository) {
+    private MessageService messageService;
+
+    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService, LikeRepository likeRepository, MessageService messageService) {
         this.commentRepository = commentRepository;
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.replyService = replyService;
         this.likeRepository = likeRepository;
+        this.messageService = messageService;
     }
 
     @Override
@@ -62,6 +67,14 @@ public class CommentServiceImpl implements CommentService {
         if (articleOptional.isPresent()) {
             articleOptional.get().setRecentCommentDate(new Timestamp(System.currentTimeMillis()));
             articleRepository.save(articleOptional.get());
+            MessageComment messageComment = new MessageComment();
+            messageComment.setCommentId(comment.getId());
+            messageComment.setContent(comment.getContent());
+            messageComment.setArticleId(articleOptional.get().getId());
+            messageComment.setTitle(articleOptional.get().getTitle());
+            messageComment.setFromUserId(user.getId());
+            messageComment.setToUserId(articleOptional.get().getUserId());
+            messageService.sendMessage(messageComment);
         }
         return ResultVoUtil.success(simpleCommentDTO);
     }
@@ -125,6 +138,13 @@ public class CommentServiceImpl implements CommentService {
             l.setType(Type.COMMENT);
             addLikeCount(l.getTypeId());
             likeRepository.save(l);
+            MessageLike messageLike = new MessageLike();
+            messageLike.setTypeId(l.getTypeId());
+            messageLike.setFromUserId(l.getUserId());
+            Comment comment =  commentRepository.getOne(l.getTypeId());
+            messageLike.setToUserId(comment.getUserId());
+            messageLike.setMessageType(MessageType.COMMENT);
+            messageService.sendMessage(messageLike);
         }
     }
 

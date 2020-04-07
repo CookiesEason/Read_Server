@@ -7,6 +7,7 @@ import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.LikeRepository;
 import com.xzy.read.repository.ReplyRepository;
+import com.xzy.read.service.MessageService;
 import com.xzy.read.service.ReplyService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
@@ -31,11 +32,14 @@ public class ReplyServiceImpl implements ReplyService {
 
     private LikeRepository likeRepository;
 
-    public ReplyServiceImpl(ReplyRepository replyRepository, ArticleRepository articleRepository, UserService userService, LikeRepository likeRepository) {
+    private MessageService messageService;
+
+    public ReplyServiceImpl(ReplyRepository replyRepository, ArticleRepository articleRepository, UserService userService, LikeRepository likeRepository, MessageService messageService) {
         this.replyRepository = replyRepository;
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.likeRepository = likeRepository;
+        this.messageService = messageService;
     }
 
     @Override
@@ -52,6 +56,14 @@ public class ReplyServiceImpl implements ReplyService {
         if (articleOptional.isPresent()) {
             articleOptional.get().setRecentCommentDate(new Timestamp(System.currentTimeMillis()));
             articleRepository.save(articleOptional.get());
+            MessageComment messageComment = new MessageComment();
+            messageComment.setCommentId(reply.getCommentId());
+            messageComment.setContent(reply.getContent());
+            messageComment.setArticleId(articleOptional.get().getId());
+            messageComment.setTitle(articleOptional.get().getTitle());
+            messageComment.setFromUserId(reply.getFromUserId());
+            messageComment.setToUserId(reply.getToUserId());
+            messageService.sendMessage(messageComment);
         }
         return ResultVoUtil.success(simpleReplyDTO);
     }

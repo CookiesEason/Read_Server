@@ -3,6 +3,7 @@ package com.xzy.read.service.impl;
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.*;
 import com.xzy.read.entity.*;
+import com.xzy.read.entity.enums.MessageType;
 import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.*;
 import com.xzy.read.service.*;
@@ -49,7 +50,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private TimelineRepository timelineRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository) {
+    private MessageService messageService;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository, MessageService messageService) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
@@ -59,6 +62,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.collectionRepository = collectionRepository;
         this.topicArticleRepository = topicArticleRepository;
         this.timelineRepository = timelineRepository;
+        this.messageService = messageService;
     }
 
     @Override
@@ -263,6 +267,13 @@ public class ArticleServiceImpl implements ArticleService {
             l.setType(Type.ARTICLE);
             addLikeCount(l.getTypeId());
             likeRepository.save(l);
+            MessageLike messageLike = new MessageLike();
+            Article article = articleRepository.getOne(l.getTypeId());
+            messageLike.setTypeId(l.getTypeId());
+            messageLike.setFromUserId(l.getUserId());
+            messageLike.setToUserId(article.getUserId());
+            messageLike.setMessageType(MessageType.ARTICLE);
+            messageService.sendMessage(messageLike);
         }
     }
 

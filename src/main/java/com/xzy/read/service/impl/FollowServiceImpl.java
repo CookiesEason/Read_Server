@@ -5,8 +5,10 @@ import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.*;
 import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.FollowType;
+import com.xzy.read.entity.enums.MessageType;
 import com.xzy.read.repository.*;
 import com.xzy.read.service.FollowService;
+import com.xzy.read.service.MessageService;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
 import org.jsoup.Jsoup;
@@ -44,7 +46,9 @@ public class FollowServiceImpl implements FollowService {
 
     private TimelineRepository timelineRepository;
 
-    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository, TopicArticleRepository topicArticleRepository, ArticleRepository articleRepository, TopicRepository topicRepository, NoteBooksRepository noteBooksRepository, TimelineRepository timelineRepository) {
+    private MessageService messageService;
+
+    public FollowServiceImpl(FollowersRepository followersRepository, FollowsRepository followsRepository, UserRepository userRepository, TopicArticleRepository topicArticleRepository, ArticleRepository articleRepository, TopicRepository topicRepository, NoteBooksRepository noteBooksRepository, TimelineRepository timelineRepository, MessageService messageService) {
         this.followersRepository = followersRepository;
         this.followsRepository = followsRepository;
         this.userRepository = userRepository;
@@ -53,6 +57,7 @@ public class FollowServiceImpl implements FollowService {
         this.topicRepository = topicRepository;
         this.noteBooksRepository = noteBooksRepository;
         this.timelineRepository = timelineRepository;
+        this.messageService = messageService;
     }
 
     @Override
@@ -65,6 +70,12 @@ public class FollowServiceImpl implements FollowService {
         }
         followers.setStatus(true);
         followersRepository.save(followers);
+        MessageFollow messageFollow = new MessageFollow();
+        messageFollow.setTypeId(followers.getToUserId());
+        messageFollow.setFromUserId(followers.getFromUserId());
+        messageFollow.setToUserId(followers.getToUserId());
+        messageFollow.setMessageType(MessageType.USER);
+        messageService.sendMessage(messageFollow);
         return ResultVoUtil.success();
     }
 
@@ -135,6 +146,19 @@ public class FollowServiceImpl implements FollowService {
         follows.setStatus(true);
         follows.setFollowType(followType);
         followsRepository.save(follows);
+        MessageFollow messageFollow = new MessageFollow();
+        messageFollow.setTypeId(follows.getTypeId());
+        messageFollow.setFromUserId(follows.getUserId());
+        if (followType.equals(FollowType.TOPIC)) {
+            Topic topic = topicRepository.getOne(follows.getTypeId());
+            messageFollow.setMessageType(MessageType.TOPIC);
+            messageFollow.setToUserId(topic.getUserId());
+        } else {
+            NoteBooks noteBooks = noteBooksRepository.getOne(follows.getTypeId());
+            messageFollow.setMessageType(MessageType.NOTEBOOK);
+            messageFollow.setToUserId(noteBooks.getUserId());
+        }
+        messageService.sendMessage(messageFollow);
         return ResultVoUtil.success();
     }
 

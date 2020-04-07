@@ -1,5 +1,6 @@
 package com.xzy.read.entity;
 
+import com.xzy.read.entity.enums.MessageType;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -9,22 +10,32 @@ import java.sql.Timestamp;
 
 /**
  * @author XieZhongYi
- * 2020/04/01 14:20
+ * 2020/04/06 21:29
  */
 @Entity
 @Data
-public class TopicArticle {
+@EntityListeners(AuditingEntityListener.class)
+public class MessageComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long commentId;
+
+    private String content;
+
     private Long articleId;
 
-    private Long topicId;
+    private String title;
 
-    private Boolean isPassed;
+    private Long fromUserId;
 
-    private Long userId;
+    private Long toUserId;
+
+    private Boolean isRead = false;
+
+    @CreatedDate
+    private Timestamp createdDate;
 
 }

@@ -118,6 +118,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public ResultVo collect(TopicArticle topicArticle) {
         topicArticle.setIsPassed(true);
+        topicArticle.setUserId(userService.getUserId());
         topicArticleRepository.save(topicArticle);
         return ResultVoUtil.success();
     }
@@ -146,6 +147,7 @@ public class TopicServiceImpl implements TopicService {
                     topicArticle.setIsPassed(false);
                     //todo 发送投稿请求
                 }
+                topicArticle.setUserId(topic.getUserId());
                 topicArticleRepository.save(topicArticle);
                 return ResultVoUtil.success();
             } else {
