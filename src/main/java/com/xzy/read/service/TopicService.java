@@ -1,6 +1,7 @@
 package com.xzy.read.service;
 
 import com.xzy.read.VO.ResultVo;
+import com.xzy.read.dto.RequestTopicArticle;
 import com.xzy.read.entity.Topic;
 import com.xzy.read.entity.TopicArticle;
 
@@ -46,8 +47,30 @@ public interface TopicService {
      */
     ResultVo submit(TopicArticle topicArticle);
 
+
+    /**
+     * 投稿确认的专题
+     * @param userId
+     * @return
+     */
+    ResultVo needSubmitTopic(Long userId);
+
+    /**
+     * 全部未处理投稿
+     * @param userId
+     * @return
+     */
+    ResultVo allSubmitList(Long userId);
+
     /**
      * 投稿列表
      */
-    ResultVo submitList(Long topicId);
+    ResultVo submitList(Long topicId, Boolean up);
+
+
+    /**
+     * 审核
+     * @param requestTopicArticle
+     */
+    void verify(RequestTopicArticle requestTopicArticle);
 }

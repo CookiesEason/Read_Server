@@ -2,15 +2,9 @@ package com.xzy.read.service.impl;
 
 import com.xzy.read.VO.ResultVo;
 import com.xzy.read.dto.*;
-import com.xzy.read.entity.Article;
-import com.xzy.read.entity.Topic;
-import com.xzy.read.entity.TopicArticle;
-import com.xzy.read.entity.User;
+import com.xzy.read.entity.*;
 import com.xzy.read.entity.enums.FollowType;
-import com.xzy.read.repository.ArticleRepository;
-import com.xzy.read.repository.FollowsRepository;
-import com.xzy.read.repository.TopicArticleRepository;
-import com.xzy.read.repository.TopicRepository;
+import com.xzy.read.repository.*;
 import com.xzy.read.service.TopicService;
 import com.xzy.read.service.UserService;
 import com.xzy.read.util.ResultVoUtil;
@@ -43,12 +37,15 @@ public class TopicServiceImpl implements TopicService {
 
     private FollowsRepository followsRepository;
 
-    public TopicServiceImpl(TopicRepository topicRepository, TopicArticleRepository topicArticleRepository, UserService userService, ArticleRepository articleRepository, FollowsRepository followsRepository) {
+    private MessageOtherRepository messageOtherRepository;
+
+    public TopicServiceImpl(TopicRepository topicRepository, TopicArticleRepository topicArticleRepository, UserService userService, ArticleRepository articleRepository, FollowsRepository followsRepository, MessageOtherRepository messageOtherRepository) {
         this.topicRepository = topicRepository;
         this.topicArticleRepository = topicArticleRepository;
         this.userService = userService;
         this.articleRepository = articleRepository;
         this.followsRepository = followsRepository;
+        this.messageOtherRepository = messageOtherRepository;
     }
 
     @Override
@@ -141,11 +138,10 @@ public class TopicServiceImpl implements TopicService {
         if (topicOptional.isPresent()) {
             Topic topic = topicOptional.get();
             if (topic.getIsSubmit()) {
-                if (topic.getIsVerify()) {
+                if (!topic.getIsVerify()) {
                     topicArticle.setIsPassed(true);
                 } else {
                     topicArticle.setIsPassed(false);
-                    //todo 发送投稿请求
                 }
                 topicArticle.setUserId(topic.getUserId());
                 topicArticleRepository.save(topicArticle);
@@ -158,18 +154,83 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public ResultVo submitList(Long topicId) {
-        List<TopicArticle> topicArticles = topicArticleRepository.findAllByTopicIdAndIsPassed(topicId,false);
-        List<RecommendSimpleArticle> simpleArticles = new ArrayList<>();
+    public ResultVo needSubmitTopic(Long userId) {
+        List<Topic> topics = topicRepository.findAllByUserIdAndIsVerifyAndIsSubmit(userId, true, true);
+        List<MessageTopicDTO> messageTopicDTOS = new ArrayList<>();
+        for (Topic topic : topics) {
+            MessageTopicDTO messageTopicDTO = new MessageTopicDTO(topic.getId(),
+                    topic.getName(),topic.getHeadUrl(),
+                    topicArticleRepository.countUnpassedArticleForTopic(topic.getId()));
+            messageTopicDTOS.add(messageTopicDTO);
+        }
+        return ResultVoUtil.success(messageTopicDTOS);
+    }
+
+    @Override
+    public ResultVo allSubmitList(Long userId) {
+        List<TopicArticle> topicArticles = topicArticleRepository.findAllByUserIdAndIsPassed(userId, false);
+        List<MessageArticleDTO> simpleArticles = new ArrayList<>();
         for (TopicArticle topicArticle : topicArticles) {
             Optional<Article> optionalArticle = articleRepository.findById(topicArticle.getArticleId());
             if (optionalArticle.isPresent()) {
-                RecommendSimpleArticle simpleArticle = new RecommendSimpleArticle(topicArticle.getArticleId(),
-                        optionalArticle.get().getTitle());
+                Article article = optionalArticle.get();
+                User user = userService.findById(article.getUserId());
+                MessageArticleDTO simpleArticle = new MessageArticleDTO(user.getId(), user.getHeadUrl(), user.getNickname(),
+                        article.getCreatedDate(),article.getId(),article.getTitle(),
+                        removeHtml(article.getContent()),article.getClicks(),
+                        articleRepository.countCommentsByArticleId(article.getId()),article.getLikes(),
+                        topicArticle.getIsPassed(),
+                        topicArticle.getTopicId());
                 simpleArticles.add(simpleArticle);
             }
         }
         return ResultVoUtil.success(simpleArticles);
+    }
+
+    @Override
+    public ResultVo submitList(Long topicId, Boolean up) {
+        List<TopicArticle> topicArticles;
+        if (up) {
+            topicArticles = topicArticleRepository.findAllByTopicIdAndIsPassed(topicId,false);
+        } else {
+            topicArticles = topicArticleRepository.findAllByTopicIdOrderByIsPassedAsc(topicId);
+        }
+        List<MessageArticleDTO> simpleArticles = new ArrayList<>();
+        for (TopicArticle topicArticle : topicArticles) {
+            Optional<Article> optionalArticle = articleRepository.findById(topicArticle.getArticleId());
+            if (optionalArticle.isPresent()) {
+                Article article = optionalArticle.get();
+                User user = userService.findById(article.getUserId());
+                MessageArticleDTO simpleArticle = new MessageArticleDTO(user.getId(), user.getHeadUrl(), user.getNickname(),
+                        article.getCreatedDate(),article.getId(),article.getTitle(),
+                        removeHtml(article.getContent()),article.getClicks(),
+                        articleRepository.countCommentsByArticleId(article.getId()),article.getLikes(),
+                        topicArticle.getIsPassed(), topicArticle.getTopicId());
+                simpleArticles.add(simpleArticle);
+            }
+        }
+        return ResultVoUtil.success(simpleArticles);
+    }
+
+    @Override
+    public void verify(RequestTopicArticle requestTopicArticle) {
+        TopicArticle t = topicArticleRepository.findByArticleIdAndTopicId(requestTopicArticle.getArticleId(),
+                requestTopicArticle.getTopicId());
+        MessageOther messageOther = new MessageOther();
+        messageOther.setArticleId(t.getArticleId());
+        messageOther.setTopicId(t.getTopicId());
+        messageOther.setToUserId(articleRepository.getOne(t.getArticleId()).getUserId());
+        messageOther.setIsRead(false);
+        messageOther.setReason(requestTopicArticle.getReason());
+        if (requestTopicArticle.getIsPassed()) {
+            messageOther.setIsRejected(false);
+            t.setIsPassed(requestTopicArticle.getIsPassed());
+            topicArticleRepository.save(t);
+        } else {
+            messageOther.setIsRejected(true);
+            topicArticleRepository.delete(t);
+        }
+        messageOtherRepository.save(messageOther);
     }
 
     @Override

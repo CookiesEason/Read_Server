@@ -41,7 +41,11 @@ public class MessageServiceImpl implements MessageService {
 
     private FollowersRepository followersRepository;
 
-    public MessageServiceImpl(MessageCommentRepository messageCommentRepository, MessageLikeRepository messageLikeRepository, MessageFollowRepository messageFollowRepository, UserRepository userRepository, ArticleRepository articleRepository, CommentRepository commentRepository, NoteBooksRepository noteBooksRepository, TopicRepository topicRepository, FollowersRepository followersRepository) {
+    private TopicArticleRepository topicArticleRepository;
+
+    private MessageOtherRepository messageOtherRepository;
+
+    public MessageServiceImpl(MessageCommentRepository messageCommentRepository, MessageLikeRepository messageLikeRepository, MessageFollowRepository messageFollowRepository, UserRepository userRepository, ArticleRepository articleRepository, CommentRepository commentRepository, NoteBooksRepository noteBooksRepository, TopicRepository topicRepository, FollowersRepository followersRepository, TopicArticleRepository topicArticleRepository, MessageOtherRepository messageOtherRepository) {
         this.messageCommentRepository = messageCommentRepository;
         this.messageLikeRepository = messageLikeRepository;
         this.messageFollowRepository = messageFollowRepository;
@@ -51,6 +55,8 @@ public class MessageServiceImpl implements MessageService {
         this.noteBooksRepository = noteBooksRepository;
         this.topicRepository = topicRepository;
         this.followersRepository = followersRepository;
+        this.topicArticleRepository = topicArticleRepository;
+        this.messageOtherRepository = messageOtherRepository;
     }
 
     @Override
@@ -58,8 +64,9 @@ public class MessageServiceImpl implements MessageService {
         MessageDTO messageDTO = new MessageDTO(
                 messageCommentRepository.countUnreadMessage(userId),
                 messageLikeRepository.countUnreadMessage(userId),
-                0L,
-                messageFollowRepository.countUnreadMessage(userId)
+                topicArticleRepository.countUnpassedArticle(userId),
+                messageFollowRepository.countUnreadMessage(userId),
+                messageOtherRepository.countUnreadMessage(userId)
         );
         return ResultVoUtil.success(messageDTO);
     }
@@ -157,6 +164,24 @@ public class MessageServiceImpl implements MessageService {
         return ResultVoUtil.success(pageDTO);
     }
 
+    @Override
+    public ResultVo getOthersMessages(Long userId, int page) {
+        Page<MessageOther> otherPage = messageOtherRepository.findAllByToUserId(userId,
+                PageRequest.of(page-1, 5,  Sort.by(Sort.Direction.DESC, "id","isRead")));
+        List<MessageOtherDTO> messageDTOs = new ArrayList<>();
+        for (MessageOther messageOther : otherPage.toList()) {
+            Article article = articleRepository.getOne(messageOther.getArticleId());
+            Topic topic = topicRepository.getOne(messageOther.getTopicId());
+            MessageOtherDTO messageOtherDTO = new MessageOtherDTO(messageOther.getArticleId(), article.getTitle(),
+                    topic.getId(), topic.getName(), messageOther.getReason(),messageOther.getIsRejected(), messageOther.getCreatedDate());
+            messageDTOs.add(messageOtherDTO);
+        }
+        PageDTO<MessageOtherDTO> pageDTO = new PageDTO<>(messageDTOs,
+                otherPage.getTotalElements(), otherPage.getTotalPages());
+        readMessage(userId, 2);
+        return ResultVoUtil.success(pageDTO);
+    }
+
     private void readMessage(Long userId, int type) {
         if (type == 0) {
             List<MessageComment> messageComments = messageCommentRepository.findAllByToUserIdAndIsRead(userId, false);
@@ -167,6 +192,9 @@ public class MessageServiceImpl implements MessageService {
             messageLikes.forEach(messageLike -> messageLike.setIsRead(true));
             messageLikeRepository.saveAll(messageLikes);
         } else if (type == 2){
+            List<MessageOther> messageOthers = messageOtherRepository.findAllByToUserIdAndIsRead(userId, false);
+            messageOthers.forEach(messageFollow -> messageFollow.setIsRead(true));
+            messageOtherRepository.saveAll(messageOthers);
         } else {
             List<MessageFollow> messageFollows = messageFollowRepository.findAllByToUserIdAndIsRead(userId, false);
             messageFollows.forEach(messageFollow -> messageFollow.setIsRead(true));

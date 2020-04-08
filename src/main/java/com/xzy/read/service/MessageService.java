@@ -19,6 +19,8 @@ public interface MessageService {
 
     ResultVo getFollowMessages(Long userId, int page);
 
+    ResultVo getOthersMessages(Long userId, int page);
+
     /**
      * 评论
      * @param messageComment

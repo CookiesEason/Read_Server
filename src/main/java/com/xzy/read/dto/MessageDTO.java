@@ -19,4 +19,6 @@ public class MessageDTO {
 
     private Long follows;
 
+    private Long others;
+
 }
