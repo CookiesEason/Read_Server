@@ -1,6 +1,8 @@
 package com.xzy.read.repository;
 
 import com.xzy.read.entity.Topic;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,4 +18,6 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     List<Topic> findAllByUserId(Long userId);
 
     List<Topic> findAllByUserIdAndIsVerifyAndIsSubmit(Long userId, Boolean isVerify, Boolean isSubmit);
+
+    Page<Topic> findAllByNameLikeOrIntroduceLike(String name, String content,Pageable pageable);
 }

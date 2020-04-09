@@ -1,6 +1,8 @@
 package com.xzy.read.repository;
 
 import com.xzy.read.entity.NoteBooks;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -17,5 +19,7 @@ public interface NoteBooksRepository extends JpaRepository<NoteBooks, Long> {
     NoteBooks findByNameAndUserId(String name,Long userId);
 
     Optional<NoteBooks> findByIdAndIsDeleted(Long id, Boolean isDeleted);
+
+    Page<NoteBooks> findAllByNameLike(String content, Pageable pageable);
 
 }
