@@ -8,6 +8,6 @@ import com.xzy.read.VO.ResultVo;
  */
 public interface SearchService {
 
-    ResultVo search(String content, int page, String type);
+    ResultVo search(String content, int page, String type, String order);
 
 }

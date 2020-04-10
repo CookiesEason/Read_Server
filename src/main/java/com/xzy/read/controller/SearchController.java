@@ -24,8 +24,8 @@ public class SearchController {
 
     @GetMapping
     public ResultVo search(@RequestParam String content, @RequestParam(defaultValue = "1") int page,
-                           @RequestParam String type) {
-        return searchService.search(content, page, type);
+                           @RequestParam String type, @RequestParam(required = false,defaultValue = "") String order) {
+        return searchService.search(content, page, type, order);
     }
 
 }
