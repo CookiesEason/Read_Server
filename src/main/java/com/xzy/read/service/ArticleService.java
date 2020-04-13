@@ -16,6 +16,13 @@ public interface ArticleService {
      * TODO 推荐待完成
      */
 
+    /**
+     * 在文章详情页面下推荐文章，根据关键词
+     * @param articleId
+     * @return
+     */
+    ResultVo recommendArticles(Long articleId);
+
     ResultVo findAllByNoteId(Long id);
 
     ResultVo create(Article article);

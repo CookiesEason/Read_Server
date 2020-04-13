@@ -9,11 +9,22 @@ import com.xzy.read.repository.*;
 import com.xzy.read.service.*;
 import com.xzy.read.util.ResultVoUtil;
 import com.xzy.read.util.SecurityUtil;
+import com.xzy.read.util.algorithm.TFIDF;
+import lombok.extern.slf4j.Slf4j;
+import org.ansj.app.keyword.Keyword;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +40,7 @@ import java.util.Optional;
  * @author XieZhongYi
  * 2020/03/25 16:00
  */
+@Slf4j
 @Service
 public class ArticleServiceImpl implements ArticleService {
 
@@ -52,7 +64,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private MessageService messageService;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository, MessageService messageService) {
+    private SearchArticleRepository searchArticleRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository, MessageService messageService, ElasticsearchRestTemplate elasticsearchRestTemplate, SearchArticleRepository searchArticleRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
@@ -63,6 +77,40 @@ public class ArticleServiceImpl implements ArticleService {
         this.topicArticleRepository = topicArticleRepository;
         this.timelineRepository = timelineRepository;
         this.messageService = messageService;
+        this.searchArticleRepository = searchArticleRepository;
+    }
+
+    @Override
+    public ResultVo recommendArticles(Long articleId) {
+        Optional<Article> optionalArticle = articleRepository.findById(articleId);
+        if (optionalArticle.isPresent()) {
+            Article article = optionalArticle.get();
+            List<Keyword> keywords = TFIDF.getTFIDE(article.getTitle(),removeHtml(article.getContent()),2);
+            String key1 = keywords.get(0).getName();
+            String key2 = keywords.get(1).getName();
+            log.info("关键词" + keywords);
+            SearchQuery searchQuery = new NativeSearchQueryBuilder().
+                    withQuery(QueryBuilders.boolQuery().should(QueryBuilders.termQuery("title",key1))
+                            .mustNot(QueryBuilders.termQuery("id", articleId))
+                    .should(QueryBuilders.termQuery("content",key1).boost(2.0f))
+                    .should(QueryBuilders.termQuery("title",key2))
+                    .should(QueryBuilders.termQuery("content",key2)))
+                    .withPageable(PageRequest.of(0,5))
+                    .build();
+            Page<SearchArticle> articlePage = searchArticleRepository.search(searchQuery);
+            List<LikeArticleDTO> likeArticleDTOS = new ArrayList<>();
+            for (SearchArticle searchArticle : articlePage.toList()) {
+                User user = userService.findById(searchArticle.getUser_id());
+                LikeArticleDTO likeArticleDTO = new LikeArticleDTO(user.getId(),user.getHeadUrl(),user.getNickname(),
+                        searchArticle.getCreated_date(),searchArticle.getId(),
+                        searchArticle.getTitle(), removeHtml(searchArticle.getContent()),searchArticle.getClicks(),
+                        articleRepository.countCommentsByArticleId(searchArticle.getId()),
+                        searchArticle.getLikes());
+                likeArticleDTOS.add(likeArticleDTO);
+            }
+            return ResultVoUtil.success(likeArticleDTOS);
+        }
+        return ResultVoUtil.error(0, "文章不存在");
     }
 
     @Override

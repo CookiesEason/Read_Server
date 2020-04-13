@@ -136,4 +136,9 @@ public class ArticleController {
         return articleService.findCollections();
     }
 
+    @GetMapping("/p/{id}/recommend")
+    public ResultVo recommendById(@PathVariable Long id) {
+        return articleService.recommendArticles(id);
+    }
+
 }
