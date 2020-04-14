@@ -12,11 +12,7 @@ import com.xzy.read.util.SecurityUtil;
 import com.xzy.read.util.algorithm.TFIDF;
 import lombok.extern.slf4j.Slf4j;
 import org.ansj.app.keyword.Keyword;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.data.domain.Page;
@@ -66,7 +62,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private SearchArticleRepository searchArticleRepository;
 
-    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository, MessageService messageService, ElasticsearchRestTemplate elasticsearchRestTemplate, SearchArticleRepository searchArticleRepository) {
+    private ViewLogsRepository viewLogsRepository;
+
+    public ArticleServiceImpl(ArticleRepository articleRepository, UserService userService, FileService fileService, FollowService followersService, NoteBooksService noteBooksService, LikeRepository likeRepository, CollectionRepository collectionRepository, TopicArticleRepository topicArticleRepository, TimelineRepository timelineRepository, MessageService messageService, ElasticsearchRestTemplate elasticsearchRestTemplate, SearchArticleRepository searchArticleRepository, ViewLogsRepository viewLogsRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.fileService = fileService;
@@ -78,6 +76,7 @@ public class ArticleServiceImpl implements ArticleService {
         this.timelineRepository = timelineRepository;
         this.messageService = messageService;
         this.searchArticleRepository = searchArticleRepository;
+        this.viewLogsRepository = viewLogsRepository;
     }
 
     @Override
@@ -270,6 +269,14 @@ public class ArticleServiceImpl implements ArticleService {
                 ) > 0;
                 isLiked = likeRepository.existsByTypeIdAndUserIdAndStatusAndType(article.getId(), userId, true, Type.ARTICLE);
                 isCollected = collectionRepository.existsByArticleIdAndUserId(article.getId(),userId);
+                ViewLogs viewLogs = viewLogsRepository.findByUserIdAndArticleId(userId, id);
+                if (viewLogs == null) {
+                    ViewLogs v = new ViewLogs();
+                    v.setArticleId(id);
+                    v.setUserId(userId);
+                    v.setPreferDegree(0);
+                    viewLogsRepository.save(v);
+                }
             }
             NoteBooks noteBooks = noteBooksService.findById(article.getNotebookId());
             Long allLikes = articleRepository.countLikesByUserId(article.getUserId());
@@ -322,6 +329,11 @@ public class ArticleServiceImpl implements ArticleService {
             messageLike.setToUserId(article.getUserId());
             messageLike.setMessageType(MessageType.ARTICLE);
             messageService.sendMessage(messageLike);
+            ViewLogs viewLogs = viewLogsRepository.findByUserIdAndArticleId(l.getUserId(), l.getTypeId());
+            if (viewLogs != null && viewLogs.getPreferDegree() < 1) {
+                viewLogs.setPreferDegree(1);
+                viewLogsRepository.save(viewLogs);
+            }
         }
     }
 
@@ -383,6 +395,11 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResultVo collection(Collection collection) {
         collectionRepository.save(collection);
+        ViewLogs viewLogs = viewLogsRepository.findByUserIdAndArticleId(collection.getUserId(), collection.getArticleId());
+        if (viewLogs != null && viewLogs.getPreferDegree() < 3) {
+            viewLogs.setPreferDegree(3);
+            viewLogsRepository.save(viewLogs);
+        }
         return ResultVoUtil.success();
     }
 

@@ -5,6 +5,7 @@ import com.xzy.read.entity.Article;
 import com.xzy.read.entity.Collection;
 import com.xzy.read.entity.Likes;
 import com.xzy.read.service.ArticleService;
+import com.xzy.read.service.RecommendService;
 import com.xzy.read.service.TopicService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,9 +22,12 @@ public class ArticleController {
 
     private TopicService topicService;
 
-    public ArticleController(ArticleService articleService, TopicService topicService) {
+    private RecommendService recommendService;
+
+    public ArticleController(ArticleService articleService, TopicService topicService, RecommendService recommendService) {
         this.articleService = articleService;
         this.topicService = topicService;
+        this.recommendService = recommendService;
     }
 
     @GetMapping("/articles")
@@ -139,6 +143,11 @@ public class ArticleController {
     @GetMapping("/p/{id}/recommend")
     public ResultVo recommendById(@PathVariable Long id) {
         return articleService.recommendArticles(id);
+    }
+
+    @GetMapping("/articles/recommend")
+    public ResultVo recommendByUserId(Long userId,@RequestParam(defaultValue = "1") int page) {
+        return recommendService.recommendByUserId(userId, page);
     }
 
 }

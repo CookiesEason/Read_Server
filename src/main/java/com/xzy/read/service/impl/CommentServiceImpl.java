@@ -11,6 +11,7 @@ import com.xzy.read.entity.enums.Type;
 import com.xzy.read.repository.ArticleRepository;
 import com.xzy.read.repository.CommentRepository;
 import com.xzy.read.repository.LikeRepository;
+import com.xzy.read.repository.ViewLogsRepository;
 import com.xzy.read.service.CommentService;
 import com.xzy.read.service.MessageService;
 import com.xzy.read.service.ReplyService;
@@ -46,13 +47,16 @@ public class CommentServiceImpl implements CommentService {
 
     private MessageService messageService;
 
-    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService, LikeRepository likeRepository, MessageService messageService) {
+    private ViewLogsRepository viewLogsRepository;
+
+    public CommentServiceImpl(CommentRepository commentRepository, ArticleRepository articleRepository, UserService userService, ReplyService replyService, LikeRepository likeRepository, MessageService messageService, ViewLogsRepository viewLogsRepository) {
         this.commentRepository = commentRepository;
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.replyService = replyService;
         this.likeRepository = likeRepository;
         this.messageService = messageService;
+        this.viewLogsRepository = viewLogsRepository;
     }
 
     @Override
@@ -75,6 +79,11 @@ public class CommentServiceImpl implements CommentService {
             messageComment.setFromUserId(user.getId());
             messageComment.setToUserId(articleOptional.get().getUserId());
             messageService.sendMessage(messageComment);
+        }
+        ViewLogs viewLogs = viewLogsRepository.findByUserIdAndArticleId(comment.getUserId(), comment.getArticleId());
+        if (viewLogs != null && viewLogs.getPreferDegree() < 2) {
+            viewLogs.setPreferDegree(2);
+            viewLogsRepository.save(viewLogs);
         }
         return ResultVoUtil.success(simpleCommentDTO);
     }
