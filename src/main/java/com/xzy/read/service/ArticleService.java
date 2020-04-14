@@ -67,6 +67,8 @@ public interface ArticleService {
 
     ResultVo findHotArticles(int page);
 
+    ResultVo findNewArticles();
+
     ResultVo getArticleByName(String name,Long topicId);
 
     ResultVo getUserArticlesByUserId(Long userId,int page, String order);

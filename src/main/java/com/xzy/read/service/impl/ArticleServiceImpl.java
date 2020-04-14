@@ -434,7 +434,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public ResultVo findHotArticles(int page) {
-        Page<Article> articlePage = articleRepository.findAllByIsPublished(true,
+        Page<Article> articlePage = articleRepository.findAllByIsPublishedAndIsDeleted(true, false,
                 PageRequest.of(page-1,5,Sort.by(Sort.Direction.DESC,"likes","clicks")));
         List<Article> articleList = articlePage.toList();
         List<SimpleArticleDTO> articleDTOS = new ArrayList<>();
@@ -449,6 +449,20 @@ public class ArticleServiceImpl implements ArticleService {
         PageDTO<SimpleArticleDTO> pageDTO = new PageDTO<>(articleDTOS,
                 articlePage.getTotalElements(), articlePage.getTotalPages());
         return ResultVoUtil.success(pageDTO);
+    }
+
+    @Override
+    public ResultVo findNewArticles() {
+        Page<Article> articlePage = articleRepository.findAllByIsPublishedAndIsDeleted(true, false,
+                PageRequest.of(0,5,Sort.by(Sort.Direction.DESC,"createdDate")));
+        List<AsideArticleDTO> articleDTOS = new ArrayList<>();
+        for (Article article :  articlePage.toList()) {
+            AsideArticleDTO simpleArticleDTO = new AsideArticleDTO(
+                    article.getId(), article.getTitle(), article.getClicks()
+            );
+            articleDTOS.add(simpleArticleDTO);
+        }
+        return ResultVoUtil.success(articleDTOS);
     }
 
     @Override

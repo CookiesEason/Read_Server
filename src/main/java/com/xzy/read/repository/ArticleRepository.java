@@ -30,7 +30,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     Page<Article> findAllByUserIdAndIsPublishedAndIsDeleted(Long userId, Boolean isPublished, Boolean isDelete, Pageable pageable);
 
-    Page<Article> findAllByIsPublished(Boolean isPublished, Pageable pageable);
+    Page<Article> findAllByIsPublishedAndIsDeleted(Boolean isPublished, Boolean isDeleted ,Pageable pageable);
 
     Long countAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 

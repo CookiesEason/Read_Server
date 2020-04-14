@@ -150,4 +150,9 @@ public class ArticleController {
         return recommendService.recommendByUserId(userId, page);
     }
 
+    @GetMapping("/articles/aside/recommend")
+    public ResultVo recommendAsideArticles() {
+        return articleService.findNewArticles();
+    }
+
 }
